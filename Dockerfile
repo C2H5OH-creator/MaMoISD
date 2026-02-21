@@ -9,6 +9,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src ./src
+COPY settings.py ./settings.py
+COPY local_settings.py ./local_settings.py
 
 EXPOSE 8000
 

@@ -4,6 +4,36 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: mispris-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: VeryStrongP@sswOrd!#13
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: LNS
     ports:
       - "8000:8000"
     restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: mispris-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: VeryStrongP@sswOrd!#13
+      POSTGRES_DB: LNS
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d LNS"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  pg_data:

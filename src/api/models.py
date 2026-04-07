@@ -1,129 +1,149 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator, field_validator
 
 
-class CreateTablesRequest(BaseModel):
-    include_categories: bool = Field(
-        default=True,
-        description="Создать таблицу categories (иерархия категорий).",
-        examples=[True],
-    )
-
-    model_config = {
-        "json_schema_extra": {
-            "example": {
-                "include_categories": True,
-            }
-        }
-    }
+class MessageResponse(BaseModel):
+    status: str = Field(default="ok", examples=["ok"])
+    message: str
 
 
-class CreateTablesResponse(BaseModel):
-    status: str = Field(description="Статус выполнения операции.", examples=["ok"])
-    message: str = Field(
-        description="Краткий результат операции.",
-        examples=["Tables created (or already exist)"],
-    )
-
-
-class SubcategoryCreateRequest(BaseModel):
-    table_name: str = Field(
-        min_length=1,
-        max_length=255,
-        description="Имя таблицы, которую нужно создать как подкатегорию.",
-        examples=["pc_windows"],
-    )
-    parent_table_name: str = Field(
-        min_length=1,
-        max_length=255,
-        description="Имя родительской таблицы, к которой привязывается подкатегория.",
-        examples=["categories"],
-    )
-
-    model_config = {
-        "json_schema_extra": {
-            "example": {
-                "table_name": "pc_windows",
-                "parent_table_name": "categories",
-            }
-        }
-    }
-
-
-class SubcategoryCreateResponse(BaseModel):
-    status: str = Field(description="Статус выполнения операции.", examples=["ok"])
-    table_name: str = Field(
-        description="Имя созданной таблицы-подкатегории.", examples=["pc_windows"]
-    )
-    parent_table_name: str = Field(
-        description="Имя родительской таблицы.", examples=["categories"]
-    )
-    parent_record_id: int = Field(
-        description="ID записи, созданной в родительской таблице.", examples=[12]
-    )
-    child_record_id: int = Field(
-        description="ID записи, созданной в таблице-подкатегории.", examples=[1]
-    )
-
-
-class ProductCreateRequest(BaseModel):
-    product_table_name: str = Field(
-        min_length=1,
-        max_length=255,
-        description="Имя листовой таблицы товаров (создается автоматически при отсутствии).",
-        examples=["amd_products"],
-    )
-    category_table_name: str = Field(
-        min_length=1,
-        max_length=255,
-        description="Имя таблицы категорий, где находится товар.",
-        examples=["amd"],
-    )
-    category_id: int = Field(
+class SpecificationPayload(BaseModel):
+    specification_id: int | None = Field(
+        default=None,
         gt=0,
-        description="ID категории (записи) в category_table_name.",
-        examples=[3],
+        examples=[1],
+        description="ID уже существующей спецификации из справочника.",
     )
-    name: str = Field(
-        min_length=1,
-        max_length=255,
-        description="Название товара.",
-        examples=["AMD Ryzen 5 2600X"],
-    )
-    price: float = Field(
-        ge=0,
-        description="Цена товара.",
-        examples=[14990.0],
-    )
-    quantity: int = Field(
-        ge=0,
-        description="Количество товара.",
-        examples=[7],
-    )
+    name: str | None = Field(default=None, min_length=1, max_length=255, examples=["socket"])
+    value: str | None = Field(default=None, min_length=1, max_length=1000, examples=["AM5"])
 
-    model_config = {
-        "json_schema_extra": {
-            "example": {
-                "product_table_name": "amd_products",
-                "category_table_name": "amd",
-                "category_id": 3,
-                "name": "AMD Ryzen 5 2600X",
-                "price": 14990.0,
-                "quantity": 7,
-            }
-        }
-    }
+    @field_validator("name", "value")
+    @classmethod
+    def validate_not_blank(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Поле не должно быть пустым")
+        return normalized
+
+    @model_validator(mode="after")
+    def validate_payload(self):
+        if self.specification_id is not None:
+            if self.name is not None or self.value is not None:
+                raise ValueError(
+                    "Нужно передавать либо specification_id, либо name/value"
+                )
+            return self
+
+        if self.name is None or self.value is None:
+            raise ValueError(
+                "Для новой спецификации нужно передать оба поля: name и value"
+            )
+        return self
 
 
-class ProductCreateResponse(BaseModel):
-    status: str = Field(description="Статус выполнения операции.", examples=["ok"])
-    product_table_name: str = Field(
-        description="Имя таблицы, где создан товар.", examples=["amd_products"]
+class SpecificationResponse(BaseModel):
+    id: int
+    name: str
+    value: str
+
+
+class CategoryCreateRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=255, examples=["Процессоры"])
+    parent_id: int | None = Field(
+        default=None,
+        gt=0,
+        description="Если не указан, категория будет создана под корнем.",
+        examples=[1],
     )
-    category_table_name: str = Field(
-        description="Имя таблицы категории.", examples=["amd"]
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Имя категории не должно быть пустым")
+        return normalized
+
+
+class CategoryUpdateRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=255, examples=["Серверные процессоры"])
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Имя категории не должно быть пустым")
+        return normalized
+
+
+class CategoryMoveRequest(BaseModel):
+    new_parent_id: int = Field(gt=0, examples=[2])
+
+
+class CategoryResponse(BaseModel):
+    id: int
+    name: str
+    parent_id: int | None
+
+
+class ProductBaseRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=255, examples=["AMD Ryzen 7 5700X"])
+    price: float = Field(ge=0, examples=[14990.0])
+    quantity: int = Field(ge=0, examples=[7])
+    description: str | None = Field(
+        default=None,
+        max_length=1000,
+        examples=["8 ядер, 16 потоков"],
     )
-    category_id: int = Field(description="ID категории.", examples=[3])
-    product_id: int = Field(description="ID созданной записи товара.", examples=[11])
-    name: str = Field(description="Название товара.", examples=["AMD Ryzen 5 2600X"])
-    price: float = Field(description="Цена товара.", examples=[14990.0])
-    quantity: int = Field(description="Количество товара.", examples=[7])
+    specifications: list[SpecificationPayload] = Field(default_factory=list)
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Имя комплектующего не должно быть пустым")
+        return normalized
+
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
+
+
+class ProductCreateRequest(ProductBaseRequest):
+    category_id: int = Field(gt=0, examples=[3])
+
+
+class ProductUpdateRequest(ProductBaseRequest):
+    pass
+
+
+class ProductMoveRequest(BaseModel):
+    new_category_id: int = Field(gt=0, examples=[4])
+
+
+class ProductResponse(BaseModel):
+    id: int
+    name: str
+    category_id: int
+    price: float
+    quantity: int
+    description: str | None
+    specifications: list[SpecificationResponse]
+
+
+class DatabaseInfoResponse(BaseModel):
+    status: str
+    database: str
+    host: str
+    port: str
+    root_category_id: int
+    categories_count: int
+    products_count: int
+    specifications_count: int

@@ -8,6 +8,7 @@ import asyncpg
 from sqlalchemy import (
     CheckConstraint,
     Column,
+    DateTime,
     ForeignKey,
     Integer,
     MetaData,
@@ -58,12 +59,60 @@ products_table = Table(
     UniqueConstraint("category_id", "name", name="uq_products_category_name"),
 )
 
+enumerations_table = Table(
+    "enumerations",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("name", String(255), nullable=False),
+    Column("description", String(1000)),
+    Column("created_at", DateTime, nullable=False, server_default=func.now()),
+    Column("updated_at", DateTime, nullable=False, server_default=func.now()),
+    UniqueConstraint("name", name="uq_enumerations_name"),
+)
+
+enumeration_values_table = Table(
+    "enumeration_values",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column(
+        "enum_id",
+        Integer,
+        ForeignKey(
+            "enumerations.id",
+            ondelete="CASCADE",
+            name="fk_enumeration_values_enum_id",
+        ),
+        nullable=False,
+    ),
+    Column("value", String(255), nullable=False),
+    Column("priority", Integer, nullable=False, server_default="0"),
+    Column("description", String(1000)),
+    Column("created_at", DateTime, nullable=False, server_default=func.now()),
+    Column("updated_at", DateTime, nullable=False, server_default=func.now()),
+    CheckConstraint("priority >= 0", name="ck_enumeration_values_priority_non_negative"),
+    UniqueConstraint("enum_id", "value", name="uq_enumeration_values_enum_value"),
+)
+
 specifications_table = Table(
     "specifications",
     metadata,
     Column("id", Integer, primary_key=True),
     Column("name", String(255), nullable=False),
-    Column("value", String(1000), nullable=False),
+    Column("value", String(1000)),
+    Column(
+        "enum_value_id",
+        Integer,
+        ForeignKey(
+            "enumeration_values.id",
+            ondelete="RESTRICT",
+            name="fk_specifications_enum_value_id",
+        ),
+    ),
+    CheckConstraint(
+        "(value IS NOT NULL AND enum_value_id IS NULL) OR "
+        "(value IS NULL AND enum_value_id IS NOT NULL)",
+        name="ck_specifications_value_xor_enum_value_id",
+    ),
 )
 
 product_specifications_table = Table(
@@ -198,7 +247,30 @@ def _row_to_spec_dict(row) -> dict[str, object]:
     return {
         "id": int(row.id),
         "name": str(row.name),
+        "value": str(row.value) if row.value is not None else None,
+        "enum_value_id": int(row.enum_value_id) if row.enum_value_id is not None else None,
+    }
+
+
+def _row_to_enumeration_dict(row) -> dict[str, object]:
+    return {
+        "id": int(row.id),
+        "name": str(row.name),
+        "description": row.description,
+        "created_at": row.created_at,
+        "updated_at": row.updated_at,
+    }
+
+
+def _row_to_enumeration_value_dict(row) -> dict[str, object]:
+    return {
+        "id": int(row.id),
+        "enum_id": int(row.enum_id),
         "value": str(row.value),
+        "priority": int(row.priority),
+        "description": row.description,
+        "created_at": row.created_at,
+        "updated_at": row.updated_at,
     }
 
 
@@ -212,6 +284,42 @@ async def prepare_specifications_schema(session: AsyncSession) -> None:
     )
     await session.execute(
         text("ALTER TABLE specifications DROP COLUMN IF EXISTS product_id")
+    )
+    await session.execute(
+        text("ALTER TABLE specifications ADD COLUMN IF NOT EXISTS enum_value_id INTEGER")
+    )
+    await session.execute(
+        text("ALTER TABLE specifications ALTER COLUMN value DROP NOT NULL")
+    )
+    await session.execute(
+        text("ALTER TABLE specifications DROP CONSTRAINT IF EXISTS ck_specifications_value_xor_enum_value_id")
+    )
+    await session.execute(
+        text("ALTER TABLE specifications DROP CONSTRAINT IF EXISTS fk_specifications_enum_value_id")
+    )
+    await session.execute(
+        text(
+            """
+            ALTER TABLE specifications
+            ADD CONSTRAINT fk_specifications_enum_value_id
+            FOREIGN KEY (enum_value_id)
+            REFERENCES enumeration_values(id)
+            ON DELETE RESTRICT
+            """
+        )
+    )
+    await session.execute(
+        text(
+            """
+            ALTER TABLE specifications
+            ADD CONSTRAINT ck_specifications_value_xor_enum_value_id
+            CHECK (
+                (value IS NOT NULL AND enum_value_id IS NULL)
+                OR
+                (value IS NULL AND enum_value_id IS NOT NULL)
+            )
+            """
+        )
     )
 
 
@@ -279,6 +387,20 @@ async def _get_specification_row(session: AsyncSession, specification_id: int):
     return result.mappings().first()
 
 
+async def _get_enumeration_row(session: AsyncSession, enumeration_id: int):
+    result = await session.execute(
+        select(enumerations_table).where(enumerations_table.c.id == enumeration_id)
+    )
+    return result.mappings().first()
+
+
+async def _get_enumeration_value_row(session: AsyncSession, value_id: int):
+    result = await session.execute(
+        select(enumeration_values_table).where(enumeration_values_table.c.id == value_id)
+    )
+    return result.mappings().first()
+
+
 async def _category_exists_with_name(
     session: AsyncSession,
     *,
@@ -311,35 +433,81 @@ async def _product_exists_with_name(
     return await session.scalar(stmt) is not None
 
 
+async def _enumeration_exists_with_name(
+    session: AsyncSession,
+    *,
+    name: str,
+    exclude_id: int | None = None,
+) -> bool:
+    stmt = select(enumerations_table.c.id).where(
+        func.lower(enumerations_table.c.name) == name.lower(),
+    )
+    if exclude_id is not None:
+        stmt = stmt.where(enumerations_table.c.id != exclude_id)
+    return await session.scalar(stmt) is not None
+
+
+async def _enumeration_value_exists(
+    session: AsyncSession,
+    *,
+    enum_id: int,
+    value: str,
+    exclude_id: int | None = None,
+) -> bool:
+    stmt = select(enumeration_values_table.c.id).where(
+        enumeration_values_table.c.enum_id == enum_id,
+        func.lower(enumeration_values_table.c.value) == value.lower(),
+    )
+    if exclude_id is not None:
+        stmt = stmt.where(enumeration_values_table.c.id != exclude_id)
+    return await session.scalar(stmt) is not None
+
+
 async def _find_canonical_specification_id(
     session: AsyncSession,
     *,
     name: str,
-    value: str,
+    value: str | None = None,
+    enum_value_id: int | None = None,
 ) -> int | None:
-    return await session.scalar(
-        select(specifications_table.c.id).where(
-            func.lower(specifications_table.c.name) == name.lower(),
-            specifications_table.c.value == value,
-        )
+    stmt = select(specifications_table.c.id).where(
+        func.lower(specifications_table.c.name) == name.lower(),
     )
+    if enum_value_id is not None:
+        stmt = stmt.where(
+            specifications_table.c.value.is_(None),
+            specifications_table.c.enum_value_id == enum_value_id,
+        )
+    else:
+        stmt = stmt.where(
+            specifications_table.c.value == value,
+            specifications_table.c.enum_value_id.is_(None),
+        )
+    return await session.scalar(stmt)
 
 
 async def _get_or_create_canonical_specification(
     session: AsyncSession,
     *,
     name: str,
-    value: str,
+    value: str | None = None,
+    enum_value_id: int | None = None,
 ) -> dict[str, object]:
     canonical_id = await _find_canonical_specification_id(
         session,
         name=name,
         value=value,
+        enum_value_id=enum_value_id,
     )
     if canonical_id is None:
+        spec_values: dict[str, object] = {"name": name.strip()}
+        if enum_value_id is not None:
+            spec_values["enum_value_id"] = enum_value_id
+        else:
+            spec_values["value"] = value.strip() if value is not None else None
         result = await session.execute(
             insert(specifications_table)
-            .values(name=name.strip(), value=value.strip())
+            .values(**spec_values)
             .returning(specifications_table)
         )
         row = result.mappings().one()
@@ -367,7 +535,24 @@ async def resolve_specification_references(
                 await _get_or_create_canonical_specification(
                     session,
                     name=str(row["name"]),
-                    value=str(row["value"]),
+                    value=str(row["value"]) if row["value"] is not None else None,
+                    enum_value_id=(
+                        int(row["enum_value_id"]) if row["enum_value_id"] is not None else None
+                    ),
+                )
+            )
+            continue
+
+        enum_value_id = raw_spec.get("enum_value_id")
+        if enum_value_id is not None:
+            enum_value = await _get_enumeration_value_row(session, int(enum_value_id))
+            if enum_value is None:
+                raise TreeError(f"Значение перечисления с id={enum_value_id} не найдено")
+            resolved_specs.append(
+                await _get_or_create_canonical_specification(
+                    session,
+                    name=str(raw_spec["name"]),
+                    enum_value_id=int(enum_value_id),
                 )
             )
             continue
@@ -432,6 +617,200 @@ async def migrate_legacy_specifications(session: AsyncSession) -> None:
                     specification_id=int(canonical_spec["id"]),
                 )
             )
+
+
+async def create_enumeration(
+    *,
+    name: str,
+    description: str | None,
+) -> dict[str, object]:
+    async with get_session_factory()() as session:
+        if await _enumeration_exists_with_name(session, name=name):
+            raise TreeError(f"Нельзя создать перечисление: имя '{name}' уже используется")
+
+        result = await session.execute(
+            insert(enumerations_table)
+            .values(
+                name=name.strip(),
+                description=description.strip() if description else None,
+            )
+            .returning(enumerations_table)
+        )
+        await session.commit()
+        row = result.mappings().one()
+        return _row_to_enumeration_dict(row)
+
+
+async def list_enumerations() -> list[dict[str, object]]:
+    async with get_session_factory()() as session:
+        result = await session.execute(
+            select(enumerations_table).order_by(enumerations_table.c.name, enumerations_table.c.id)
+        )
+        return [_row_to_enumeration_dict(row) for row in result.mappings().all()]
+
+
+async def get_enumeration(enumeration_id: int) -> dict[str, object]:
+    async with get_session_factory()() as session:
+        row = await _get_enumeration_row(session, enumeration_id)
+        if row is None:
+            raise TreeError(f"Перечисление с id={enumeration_id} не найдено")
+        return _row_to_enumeration_dict(row)
+
+
+async def update_enumeration(
+    enumeration_id: int,
+    *,
+    name: str,
+    description: str | None,
+) -> dict[str, object]:
+    async with get_session_factory()() as session:
+        enumeration = await _get_enumeration_row(session, enumeration_id)
+        if enumeration is None:
+            raise TreeError(f"Нельзя изменить перечисление: id={enumeration_id} не найден")
+
+        if await _enumeration_exists_with_name(
+            session,
+            name=name,
+            exclude_id=enumeration_id,
+        ):
+            raise TreeError(f"Нельзя изменить перечисление: имя '{name}' уже используется")
+
+        result = await session.execute(
+            update(enumerations_table)
+            .where(enumerations_table.c.id == enumeration_id)
+            .values(
+                name=name.strip(),
+                description=description.strip() if description else None,
+                updated_at=func.now(),
+            )
+            .returning(enumerations_table)
+        )
+        await session.commit()
+        row = result.mappings().one()
+        return _row_to_enumeration_dict(row)
+
+
+async def delete_enumeration(enumeration_id: int) -> None:
+    async with get_session_factory()() as session:
+        enumeration = await _get_enumeration_row(session, enumeration_id)
+        if enumeration is None:
+            raise TreeError(f"Нельзя удалить перечисление: id={enumeration_id} не найден")
+
+        await session.execute(
+            delete(enumerations_table).where(enumerations_table.c.id == enumeration_id)
+        )
+        await session.commit()
+
+
+async def list_enumeration_values(enum_id: int) -> list[dict[str, object]]:
+    async with get_session_factory()() as session:
+        enumeration = await _get_enumeration_row(session, enum_id)
+        if enumeration is None:
+            raise TreeError(f"Перечисление с id={enum_id} не найдено")
+
+        result = await session.execute(
+            select(enumeration_values_table)
+            .where(enumeration_values_table.c.enum_id == enum_id)
+            .order_by(
+                enumeration_values_table.c.priority,
+                enumeration_values_table.c.value,
+                enumeration_values_table.c.id,
+            )
+        )
+        return [_row_to_enumeration_value_dict(row) for row in result.mappings().all()]
+
+
+async def create_enumeration_value(
+    *,
+    enum_id: int,
+    value: str,
+    priority: int,
+    description: str | None,
+) -> dict[str, object]:
+    async with get_session_factory()() as session:
+        enumeration = await _get_enumeration_row(session, enum_id)
+        if enumeration is None:
+            raise TreeError(
+                f"Нельзя создать значение перечисления: перечисление с id={enum_id} не найдено"
+            )
+
+        if await _enumeration_value_exists(session, enum_id=enum_id, value=value):
+            raise TreeError(
+                f"Нельзя создать значение перечисления: значение '{value}' уже существует в перечислении id={enum_id}"
+            )
+
+        result = await session.execute(
+            insert(enumeration_values_table)
+            .values(
+                enum_id=enum_id,
+                value=value.strip(),
+                priority=priority,
+                description=description.strip() if description else None,
+            )
+            .returning(enumeration_values_table)
+        )
+        await session.commit()
+        row = result.mappings().one()
+        return _row_to_enumeration_value_dict(row)
+
+
+async def get_enumeration_value(value_id: int) -> dict[str, object]:
+    async with get_session_factory()() as session:
+        row = await _get_enumeration_value_row(session, value_id)
+        if row is None:
+            raise TreeError(f"Значение перечисления с id={value_id} не найдено")
+        return _row_to_enumeration_value_dict(row)
+
+
+async def update_enumeration_value(
+    value_id: int,
+    *,
+    value: str,
+    priority: int,
+    description: str | None,
+) -> dict[str, object]:
+    async with get_session_factory()() as session:
+        enumeration_value = await _get_enumeration_value_row(session, value_id)
+        if enumeration_value is None:
+            raise TreeError(f"Нельзя изменить значение перечисления: id={value_id} не найден")
+
+        enum_id = int(enumeration_value["enum_id"])
+        if await _enumeration_value_exists(
+            session,
+            enum_id=enum_id,
+            value=value,
+            exclude_id=value_id,
+        ):
+            raise TreeError(
+                f"Нельзя изменить значение перечисления: значение '{value}' уже существует в перечислении id={enum_id}"
+            )
+
+        result = await session.execute(
+            update(enumeration_values_table)
+            .where(enumeration_values_table.c.id == value_id)
+            .values(
+                value=value.strip(),
+                priority=priority,
+                description=description.strip() if description else None,
+                updated_at=func.now(),
+            )
+            .returning(enumeration_values_table)
+        )
+        await session.commit()
+        row = result.mappings().one()
+        return _row_to_enumeration_value_dict(row)
+
+
+async def delete_enumeration_value(value_id: int) -> None:
+    async with get_session_factory()() as session:
+        enumeration_value = await _get_enumeration_value_row(session, value_id)
+        if enumeration_value is None:
+            raise TreeError(f"Нельзя удалить значение перечисления: id={value_id} не найден")
+
+        await session.execute(
+            delete(enumeration_values_table).where(enumeration_values_table.c.id == value_id)
+        )
+        await session.commit()
 
 
 async def create_category(name: str, parent_id: int | None = None) -> dict[str, object]:
@@ -764,7 +1143,11 @@ async def list_specifications() -> list[dict[str, object]]:
     async with get_session_factory()() as session:
         result = await session.execute(
             select(specifications_table)
-            .order_by(specifications_table.c.name, specifications_table.c.value)
+            .order_by(
+                specifications_table.c.name,
+                specifications_table.c.value,
+                specifications_table.c.enum_value_id,
+            )
         )
         return [_row_to_spec_dict(row) for row in result.mappings().all()]
 
@@ -785,6 +1168,7 @@ async def get_tree() -> dict[str, object]:
                 specifications_table.c.id,
                 specifications_table.c.name,
                 specifications_table.c.value,
+                specifications_table.c.enum_value_id,
             )
             .join(
                 specifications_table,
@@ -815,7 +1199,10 @@ async def get_tree() -> dict[str, object]:
             {
                 "id": int(row["id"]),
                 "name": str(row["name"]),
-                "value": str(row["value"]),
+                "value": str(row["value"]) if row["value"] is not None else None,
+                "enum_value_id": (
+                    int(row["enum_value_id"]) if row["enum_value_id"] is not None else None
+                ),
             }
         )
 

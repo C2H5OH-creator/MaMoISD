@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field, model_validator, field_validator
+from datetime import datetime
+
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class MessageResponse(BaseModel):
@@ -15,6 +17,12 @@ class SpecificationPayload(BaseModel):
     )
     name: str | None = Field(default=None, min_length=1, max_length=255, examples=["socket"])
     value: str | None = Field(default=None, min_length=1, max_length=1000, examples=["AM5"])
+    enum_value_id: int | None = Field(
+        default=None,
+        gt=0,
+        examples=[1],
+        description="ID значения классификатора, если характеристика использует перечисление.",
+    )
 
     @field_validator("name", "value")
     @classmethod
@@ -29,15 +37,21 @@ class SpecificationPayload(BaseModel):
     @model_validator(mode="after")
     def validate_payload(self):
         if self.specification_id is not None:
-            if self.name is not None or self.value is not None:
+            if self.name is not None or self.value is not None or self.enum_value_id is not None:
                 raise ValueError(
-                    "Нужно передавать либо specification_id, либо name/value"
+                    "Нужно передавать либо specification_id, либо name/value, либо name/enum_value_id"
                 )
             return self
 
-        if self.name is None or self.value is None:
+        if self.name is None:
+            raise ValueError("Для новой спецификации нужно передать name")
+
+        has_raw_value = self.value is not None
+        has_enum_value = self.enum_value_id is not None
+
+        if has_raw_value == has_enum_value:
             raise ValueError(
-                "Для новой спецификации нужно передать оба поля: name и value"
+                "Для новой спецификации нужно передать либо value, либо enum_value_id"
             )
         return self
 
@@ -45,7 +59,97 @@ class SpecificationPayload(BaseModel):
 class SpecificationResponse(BaseModel):
     id: int
     name: str
+    value: str | None
+    enum_value_id: int | None
+
+
+class EnumerationBaseRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=255, examples=["Форматы материнских плат"])
+    description: str | None = Field(
+        default=None,
+        max_length=1000,
+        examples=["Допустимые форм-факторы материнских плат"],
+    )
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Имя перечисления не должно быть пустым")
+        return normalized
+
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
+
+
+class EnumerationCreateRequest(EnumerationBaseRequest):
+    pass
+
+
+class EnumerationUpdateRequest(EnumerationBaseRequest):
+    pass
+
+
+class EnumerationValueBaseRequest(BaseModel):
+    value: str = Field(min_length=1, max_length=255, examples=["ATX"])
+    priority: int = Field(default=0, ge=0, examples=[10])
+    description: str | None = Field(
+        default=None,
+        max_length=1000,
+        examples=["Стандартный полноразмерный форм-фактор"],
+    )
+
+    @field_validator("value")
+    @classmethod
+    def validate_value(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Значение перечисления не должно быть пустым")
+        return normalized
+
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
+
+
+class EnumerationValueCreateRequest(EnumerationValueBaseRequest):
+    pass
+
+
+class EnumerationValueUpdateRequest(EnumerationValueBaseRequest):
+    pass
+
+
+class EnumerationResponse(BaseModel):
+    id: int
+    name: str
+    description: str | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class EnumerationValueResponse(BaseModel):
+    id: int
+    enum_id: int
     value: str
+    priority: int
+    description: str | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class EnumerationDetailResponse(EnumerationResponse):
+    values: list[EnumerationValueResponse] = Field(default_factory=list)
 
 
 class CategoryCreateRequest(BaseModel):

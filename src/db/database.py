@@ -1,6 +1,7 @@
 import asyncio
 import os
 from collections.abc import AsyncIterator
+from datetime import datetime
 from decimal import Decimal
 from urllib.parse import quote_plus
 
@@ -123,6 +124,119 @@ measurement_units_table = Table(
     Column("description", String(1000)),
     UniqueConstraint("full_name", name="uq_measurement_units_full_name"),
     UniqueConstraint("short_name", name="uq_measurement_units_short_name"),
+)
+
+parameters_table = Table(
+    "parameters",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("code", String(255), nullable=False),
+    Column("name", String(255), nullable=False),
+    Column("description", String(1000)),
+    Column("parameter_type", String(20), nullable=False),
+    Column(
+        "unit_id",
+        Integer,
+        ForeignKey(
+            "measurement_units.id",
+            ondelete="RESTRICT",
+            name="fk_parameters_unit_id",
+        ),
+    ),
+    Column(
+        "enum_id",
+        Integer,
+        ForeignKey(
+            "enumerations.id",
+            ondelete="RESTRICT",
+            name="fk_parameters_enum_id",
+        ),
+    ),
+    CheckConstraint(
+        "parameter_type IN ('integer', 'real', 'string', 'datetime', 'enum')",
+        name="ck_parameters_type",
+    ),
+    CheckConstraint(
+        "("
+        "parameter_type = 'enum' AND enum_id IS NOT NULL AND unit_id IS NULL"
+        ") OR ("
+        "parameter_type IN ('integer', 'real') AND enum_id IS NULL"
+        ") OR ("
+        "parameter_type IN ('string', 'datetime') AND enum_id IS NULL AND unit_id IS NULL"
+        ")",
+        name="ck_parameters_type_references",
+    ),
+    UniqueConstraint("code", name="uq_parameters_code"),
+)
+
+category_parameters_table = Table(
+    "category_parameters",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column(
+        "category_id",
+        Integer,
+        ForeignKey("categories.id", ondelete="CASCADE"),
+        nullable=False,
+    ),
+    Column(
+        "parameter_id",
+        Integer,
+        ForeignKey("parameters.id", ondelete="RESTRICT"),
+        nullable=False,
+    ),
+    Column("priority", Integer, nullable=False, server_default="0"),
+    Column("is_required", Integer, nullable=False, server_default="0"),
+    Column("is_inherited", Integer, nullable=False, server_default="0"),
+    Column("source_category_id", Integer, ForeignKey("categories.id", ondelete="SET NULL")),
+    Column("min_value", Numeric(18, 6)),
+    Column("max_value", Numeric(18, 6)),
+    CheckConstraint("priority >= 0", name="ck_category_parameters_priority_non_negative"),
+    CheckConstraint("is_required IN (0, 1)", name="ck_category_parameters_is_required_bool"),
+    CheckConstraint("is_inherited IN (0, 1)", name="ck_category_parameters_is_inherited_bool"),
+    CheckConstraint(
+        "min_value IS NULL OR max_value IS NULL OR min_value <= max_value",
+        name="ck_category_parameters_min_le_max",
+    ),
+    UniqueConstraint("category_id", "parameter_id", name="uq_category_parameters_category_parameter"),
+)
+
+product_parameter_values_table = Table(
+    "product_parameter_values",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column(
+        "product_id",
+        Integer,
+        ForeignKey("products.id", ondelete="CASCADE"),
+        nullable=False,
+    ),
+    Column(
+        "parameter_id",
+        Integer,
+        ForeignKey("parameters.id", ondelete="RESTRICT"),
+        nullable=False,
+    ),
+    Column("val_real", Numeric(18, 6)),
+    Column("val_int", Integer),
+    Column("val_str", String(1000)),
+    Column("val_datetime", DateTime),
+    Column(
+        "enum_value_id",
+        Integer,
+        ForeignKey("enumeration_values.id", ondelete="RESTRICT"),
+    ),
+    CheckConstraint(
+        "("
+        "(val_real IS NOT NULL)::int + "
+        "(val_int IS NOT NULL)::int + "
+        "(val_str IS NOT NULL)::int + "
+        "(val_datetime IS NOT NULL)::int + "
+        "(enum_value_id IS NOT NULL)::int"
+        ") = 1",
+        name="ck_product_parameter_values_exactly_one_value",
+    ),
+    UniqueConstraint("product_id", "parameter_id", name="uq_product_parameter_values_product_parameter"),
 )
 
 specifications_table = Table(
@@ -324,6 +438,71 @@ def _row_to_measurement_unit_dict(row) -> dict[str, object]:
         "full_name": str(row.full_name),
         "short_name": str(row.short_name),
         "description": row.description,
+    }
+
+
+def _row_to_parameter_dict(row) -> dict[str, object]:
+    return {
+        "id": int(row.id),
+        "code": str(row.code),
+        "name": str(row.name),
+        "description": row.description,
+        "parameter_type": str(row.parameter_type),
+        "unit_id": int(row.unit_id) if row.unit_id is not None else None,
+        "enum_id": int(row.enum_id) if row.enum_id is not None else None,
+    }
+
+
+def _row_to_category_parameter_dict(row) -> dict[str, object]:
+    parameter = None
+    if "code" in row:
+        parameter = {
+            "id": int(row.parameter_id),
+            "code": str(row.code),
+            "name": str(row.name),
+            "description": row.description,
+            "parameter_type": str(row.parameter_type),
+            "unit_id": int(row.unit_id) if row.unit_id is not None else None,
+            "enum_id": int(row.enum_id) if row.enum_id is not None else None,
+        }
+    return {
+        "id": int(row.id),
+        "category_id": int(row.category_id),
+        "parameter_id": int(row.parameter_id),
+        "priority": int(row.priority),
+        "is_required": bool(row.is_required),
+        "is_inherited": bool(row.is_inherited),
+        "source_category_id": (
+            int(row.source_category_id) if row.source_category_id is not None else None
+        ),
+        "min_value": float(row.min_value) if row.min_value is not None else None,
+        "max_value": float(row.max_value) if row.max_value is not None else None,
+        "parameter": parameter,
+    }
+
+
+def _row_to_product_parameter_value_dict(row) -> dict[str, object]:
+    parameter = None
+    if "code" in row:
+        parameter = {
+            "id": int(row.parameter_id),
+            "code": str(row.code),
+            "name": str(row.name),
+            "description": row.description,
+            "parameter_type": str(row.parameter_type),
+            "unit_id": int(row.unit_id) if row.unit_id is not None else None,
+            "enum_id": int(row.enum_id) if row.enum_id is not None else None,
+        }
+    return {
+        "id": int(row.id),
+        "product_id": int(row.product_id),
+        "parameter_id": int(row.parameter_id),
+        "val_real": float(row.val_real) if row.val_real is not None else None,
+        "val_int": int(row.val_int) if row.val_int is not None else None,
+        "val_str": str(row.val_str) if row.val_str is not None else None,
+        "val_datetime": row.val_datetime,
+        "enum_value_id": int(row.enum_value_id) if row.enum_value_id is not None else None,
+        "parameter": parameter,
     }
 
 
@@ -676,6 +855,37 @@ async def _get_measurement_unit_row(session: AsyncSession, unit_id: int):
     return result.mappings().first()
 
 
+async def _get_parameter_row(session: AsyncSession, parameter_id: int):
+    result = await session.execute(
+        select(parameters_table).where(parameters_table.c.id == parameter_id)
+    )
+    return result.mappings().first()
+
+
+async def _get_category_parameter_row(session: AsyncSession, category_parameter_id: int):
+    result = await session.execute(
+        select(category_parameters_table).where(
+            category_parameters_table.c.id == category_parameter_id
+        )
+    )
+    return result.mappings().first()
+
+
+async def _get_product_parameter_value_row(
+    session: AsyncSession,
+    *,
+    product_id: int,
+    parameter_id: int,
+):
+    result = await session.execute(
+        select(product_parameter_values_table).where(
+            product_parameter_values_table.c.product_id == product_id,
+            product_parameter_values_table.c.parameter_id == parameter_id,
+        )
+    )
+    return result.mappings().first()
+
+
 async def _get_enumeration_row(session: AsyncSession, enumeration_id: int):
     result = await session.execute(
         select(enumerations_table).where(enumerations_table.c.id == enumeration_id)
@@ -741,6 +951,65 @@ async def _measurement_unit_exists(
     if exclude_id is not None:
         stmt = stmt.where(measurement_units_table.c.id != exclude_id)
     return await session.scalar(stmt) is not None
+
+
+async def _parameter_exists_with_code(
+    session: AsyncSession,
+    *,
+    code: str,
+    exclude_id: int | None = None,
+) -> bool:
+    stmt = select(parameters_table.c.id).where(
+        func.lower(parameters_table.c.code) == code.lower(),
+    )
+    if exclude_id is not None:
+        stmt = stmt.where(parameters_table.c.id != exclude_id)
+    return await session.scalar(stmt) is not None
+
+
+async def _category_parameter_exists(
+    session: AsyncSession,
+    *,
+    category_id: int,
+    parameter_id: int,
+    exclude_id: int | None = None,
+) -> bool:
+    stmt = select(category_parameters_table.c.id).where(
+        category_parameters_table.c.category_id == category_id,
+        category_parameters_table.c.parameter_id == parameter_id,
+    )
+    if exclude_id is not None:
+        stmt = stmt.where(category_parameters_table.c.id != exclude_id)
+    return await session.scalar(stmt) is not None
+
+
+async def _get_category_parameter_for_value(
+    session: AsyncSession,
+    *,
+    category_id: int,
+    parameter_id: int,
+):
+    result = await session.execute(
+        select(category_parameters_table).where(
+            category_parameters_table.c.category_id == category_id,
+            category_parameters_table.c.parameter_id == parameter_id,
+        )
+    )
+    return result.mappings().first()
+
+
+def _validate_numeric_bounds(
+    *,
+    parameter_type: str,
+    min_value: Decimal | None,
+    max_value: Decimal | None,
+) -> None:
+    if parameter_type not in {"integer", "real"} and (
+        min_value is not None or max_value is not None
+    ):
+        raise TreeError("Ограничения min/max можно задавать только для числовых параметров")
+    if min_value is not None and max_value is not None and min_value > max_value:
+        raise TreeError("Минимальное значение параметра не может быть больше максимального")
 
 
 async def _enumeration_exists_with_name(
@@ -1136,10 +1405,669 @@ async def delete_measurement_unit(unit_id: int) -> None:
         if used_specification_id is not None:
             raise TreeError("Нельзя удалить единицу измерения: она используется в спецификациях")
 
+        used_parameter_id = await session.scalar(
+            select(parameters_table.c.id).where(parameters_table.c.unit_id == unit_id)
+        )
+        if used_parameter_id is not None:
+            raise TreeError("Нельзя удалить единицу измерения: она используется в параметрах")
+
         await session.execute(
             delete(measurement_units_table).where(measurement_units_table.c.id == unit_id)
         )
         await session.commit()
+
+
+async def _validate_parameter_references(
+    session: AsyncSession,
+    *,
+    parameter_type: str,
+    unit_id: int | None,
+    enum_id: int | None,
+) -> None:
+    if parameter_type not in {"integer", "real", "string", "datetime", "enum"}:
+        raise TreeError("Недопустимый тип параметра")
+
+    if parameter_type == "enum":
+        if enum_id is None:
+            raise TreeError("Для параметра типа enum нужно указать enum_id")
+        if unit_id is not None:
+            raise TreeError("Для параметра типа enum нельзя указывать unit_id")
+        enumeration = await _get_enumeration_row(session, enum_id)
+        if enumeration is None:
+            raise TreeError(f"Перечисление с id={enum_id} не найдено")
+        return
+
+    if enum_id is not None:
+        raise TreeError("enum_id можно указывать только для параметра типа enum")
+
+    if parameter_type in {"string", "datetime"} and unit_id is not None:
+        raise TreeError("unit_id можно указывать только для числовых параметров")
+
+    if unit_id is not None:
+        unit = await _get_measurement_unit_row(session, unit_id)
+        if unit is None:
+            raise TreeError(f"Единица измерения с id={unit_id} не найдена")
+
+
+async def create_parameter(
+    *,
+    code: str,
+    name: str,
+    description: str | None,
+    parameter_type: str,
+    unit_id: int | None,
+    enum_id: int | None,
+) -> dict[str, object]:
+    async with get_session_factory()() as session:
+        if await _parameter_exists_with_code(session, code=code):
+            raise TreeError(f"Нельзя создать параметр: код '{code}' уже используется")
+
+        await _validate_parameter_references(
+            session,
+            parameter_type=parameter_type,
+            unit_id=unit_id,
+            enum_id=enum_id,
+        )
+
+        result = await session.execute(
+            insert(parameters_table)
+            .values(
+                code=code.strip(),
+                name=name.strip(),
+                description=description.strip() if description else None,
+                parameter_type=parameter_type,
+                unit_id=unit_id,
+                enum_id=enum_id,
+            )
+            .returning(parameters_table)
+        )
+        await session.commit()
+        return _row_to_parameter_dict(result.mappings().one())
+
+
+async def list_parameters() -> list[dict[str, object]]:
+    async with get_session_factory()() as session:
+        result = await session.execute(
+            select(parameters_table).order_by(parameters_table.c.code, parameters_table.c.id)
+        )
+        return [_row_to_parameter_dict(row) for row in result.mappings().all()]
+
+
+async def get_parameter(parameter_id: int) -> dict[str, object]:
+    async with get_session_factory()() as session:
+        row = await _get_parameter_row(session, parameter_id)
+        if row is None:
+            raise TreeError(f"Параметр с id={parameter_id} не найден")
+        return _row_to_parameter_dict(row)
+
+
+async def update_parameter(
+    parameter_id: int,
+    *,
+    code: str,
+    name: str,
+    description: str | None,
+    parameter_type: str,
+    unit_id: int | None,
+    enum_id: int | None,
+) -> dict[str, object]:
+    async with get_session_factory()() as session:
+        parameter = await _get_parameter_row(session, parameter_id)
+        if parameter is None:
+            raise TreeError(f"Нельзя изменить параметр: id={parameter_id} не найден")
+
+        if await _parameter_exists_with_code(
+            session,
+            code=code,
+            exclude_id=parameter_id,
+        ):
+            raise TreeError(f"Нельзя изменить параметр: код '{code}' уже используется")
+
+        await _validate_parameter_references(
+            session,
+            parameter_type=parameter_type,
+            unit_id=unit_id,
+            enum_id=enum_id,
+        )
+
+        result = await session.execute(
+            update(parameters_table)
+            .where(parameters_table.c.id == parameter_id)
+            .values(
+                code=code.strip(),
+                name=name.strip(),
+                description=description.strip() if description else None,
+                parameter_type=parameter_type,
+                unit_id=unit_id,
+                enum_id=enum_id,
+            )
+            .returning(parameters_table)
+        )
+        await session.commit()
+        return _row_to_parameter_dict(result.mappings().one())
+
+
+async def delete_parameter(parameter_id: int) -> None:
+    async with get_session_factory()() as session:
+        parameter = await _get_parameter_row(session, parameter_id)
+        if parameter is None:
+            raise TreeError(f"Нельзя удалить параметр: id={parameter_id} не найден")
+
+        used_category_parameter_id = await session.scalar(
+            select(category_parameters_table.c.id).where(
+                category_parameters_table.c.parameter_id == parameter_id
+            )
+        )
+        if used_category_parameter_id is not None:
+            raise TreeError("Нельзя удалить параметр: он назначен категориям")
+
+        used_product_value_id = await session.scalar(
+            select(product_parameter_values_table.c.id).where(
+                product_parameter_values_table.c.parameter_id == parameter_id
+            )
+        )
+        if used_product_value_id is not None:
+            raise TreeError("Нельзя удалить параметр: по нему есть значения изделий")
+
+        await session.execute(delete(parameters_table).where(parameters_table.c.id == parameter_id))
+        await session.commit()
+
+
+async def assign_parameter_to_category(
+    *,
+    category_id: int,
+    parameter_id: int,
+    priority: int,
+    is_required: bool,
+    is_inherited: bool = False,
+    source_category_id: int | None = None,
+    min_value: Decimal | None = None,
+    max_value: Decimal | None = None,
+) -> dict[str, object]:
+    async with get_session_factory()() as session:
+        category = await _get_category_row(session, category_id)
+        if category is None:
+            raise TreeError(f"Категория с id={category_id} не найдена")
+        parameter = await _get_parameter_row(session, parameter_id)
+        if parameter is None:
+            raise TreeError(f"Параметр с id={parameter_id} не найден")
+        if await _category_parameter_exists(
+            session,
+            category_id=category_id,
+            parameter_id=parameter_id,
+        ):
+            raise TreeError("Параметр уже назначен этой категории")
+
+        if source_category_id is not None:
+            source_category = await _get_category_row(session, source_category_id)
+            if source_category is None:
+                raise TreeError(f"Категория-источник с id={source_category_id} не найдена")
+
+        _validate_numeric_bounds(
+            parameter_type=str(parameter["parameter_type"]),
+            min_value=min_value,
+            max_value=max_value,
+        )
+
+        result = await session.execute(
+            insert(category_parameters_table)
+            .values(
+                category_id=category_id,
+                parameter_id=parameter_id,
+                priority=priority,
+                is_required=1 if is_required else 0,
+                is_inherited=1 if is_inherited else 0,
+                source_category_id=source_category_id,
+                min_value=min_value,
+                max_value=max_value,
+            )
+            .returning(category_parameters_table)
+        )
+        await session.commit()
+        return _row_to_category_parameter_dict(result.mappings().one())
+
+
+async def list_category_parameters(category_id: int) -> list[dict[str, object]]:
+    async with get_session_factory()() as session:
+        category = await _get_category_row(session, category_id)
+        if category is None:
+            raise TreeError(f"Категория с id={category_id} не найдена")
+
+        result = await session.execute(
+            select(
+                category_parameters_table,
+                parameters_table.c.code,
+                parameters_table.c.name,
+                parameters_table.c.description,
+                parameters_table.c.parameter_type,
+                parameters_table.c.unit_id,
+                parameters_table.c.enum_id,
+            )
+            .join(parameters_table, parameters_table.c.id == category_parameters_table.c.parameter_id)
+            .where(category_parameters_table.c.category_id == category_id)
+            .order_by(category_parameters_table.c.priority, parameters_table.c.code)
+        )
+        return [_row_to_category_parameter_dict(row) for row in result.mappings().all()]
+
+
+async def update_category_parameter(
+    category_parameter_id: int,
+    *,
+    priority: int,
+    is_required: bool,
+    min_value: Decimal | None,
+    max_value: Decimal | None,
+) -> dict[str, object]:
+    async with get_session_factory()() as session:
+        category_parameter = await _get_category_parameter_row(session, category_parameter_id)
+        if category_parameter is None:
+            raise TreeError(
+                f"Назначение параметра категории с id={category_parameter_id} не найдено"
+            )
+        parameter = await _get_parameter_row(session, int(category_parameter["parameter_id"]))
+        if parameter is None:
+            raise TreeError("Связанный параметр не найден")
+
+        _validate_numeric_bounds(
+            parameter_type=str(parameter["parameter_type"]),
+            min_value=min_value,
+            max_value=max_value,
+        )
+
+        result = await session.execute(
+            update(category_parameters_table)
+            .where(category_parameters_table.c.id == category_parameter_id)
+            .values(
+                priority=priority,
+                is_required=1 if is_required else 0,
+                min_value=min_value,
+                max_value=max_value,
+            )
+            .returning(category_parameters_table)
+        )
+        await session.commit()
+        return _row_to_category_parameter_dict(result.mappings().one())
+
+
+async def remove_parameter_from_category(category_parameter_id: int) -> None:
+    async with get_session_factory()() as session:
+        category_parameter = await _get_category_parameter_row(session, category_parameter_id)
+        if category_parameter is None:
+            raise TreeError(
+                f"Назначение параметра категории с id={category_parameter_id} не найдено"
+            )
+        used_value_id = await session.scalar(
+            select(product_parameter_values_table.c.id).where(
+                product_parameter_values_table.c.parameter_id == int(category_parameter["parameter_id"])
+            )
+        )
+        if used_value_id is not None:
+            raise TreeError("Нельзя удалить параметр из категории: по нему уже есть значения изделий")
+        await session.execute(
+            delete(category_parameters_table).where(
+                category_parameters_table.c.id == category_parameter_id
+            )
+        )
+        await session.commit()
+
+
+async def copy_category_parameters(category_id: int) -> list[dict[str, object]]:
+    async with get_session_factory()() as session:
+        category = await _get_category_row(session, category_id)
+        if category is None:
+            raise TreeError(f"Категория с id={category_id} не найдена")
+        parent_id = category["parent_id"]
+        if parent_id is None:
+            raise TreeError("У корневой категории нет родителя для копирования параметров")
+
+        parent_parameters = await session.execute(
+            select(category_parameters_table).where(
+                category_parameters_table.c.category_id == int(parent_id)
+            )
+        )
+        for parent_parameter in parent_parameters.mappings().all():
+            parameter_id = int(parent_parameter["parameter_id"])
+            if await _category_parameter_exists(
+                session,
+                category_id=category_id,
+                parameter_id=parameter_id,
+            ):
+                continue
+            await session.execute(
+                insert(category_parameters_table).values(
+                    category_id=category_id,
+                    parameter_id=parameter_id,
+                    priority=int(parent_parameter["priority"]),
+                    is_required=int(parent_parameter["is_required"]),
+                    is_inherited=1,
+                    source_category_id=int(parent_id),
+                    min_value=parent_parameter["min_value"],
+                    max_value=parent_parameter["max_value"],
+                )
+            )
+        await session.commit()
+
+    return await list_category_parameters(category_id)
+
+
+def _count_parameter_value_fields(
+    *,
+    val_real: Decimal | None,
+    val_int: int | None,
+    val_str: str | None,
+    val_datetime: datetime | None,
+    enum_value_id: int | None,
+) -> int:
+    return sum(
+        value is not None
+        for value in [val_real, val_int, val_str, val_datetime, enum_value_id]
+    )
+
+
+async def _validate_product_parameter_value(
+    session: AsyncSession,
+    *,
+    product,
+    parameter,
+    category_parameter,
+    val_real: Decimal | None,
+    val_int: int | None,
+    val_str: str | None,
+    val_datetime: datetime | None,
+    enum_value_id: int | None,
+) -> dict[str, object]:
+    if _count_parameter_value_fields(
+        val_real=val_real,
+        val_int=val_int,
+        val_str=val_str,
+        val_datetime=val_datetime,
+        enum_value_id=enum_value_id,
+    ) != 1:
+        raise TreeError("Нужно передать ровно одно значение параметра")
+
+    parameter_type = str(parameter["parameter_type"])
+    values: dict[str, object] = {
+        "val_real": None,
+        "val_int": None,
+        "val_str": None,
+        "val_datetime": None,
+        "enum_value_id": None,
+    }
+
+    if parameter_type == "integer":
+        if val_int is None:
+            raise TreeError("Для параметра integer нужно передать val_int")
+        decimal_value = Decimal(val_int)
+        min_value = category_parameter["min_value"]
+        max_value = category_parameter["max_value"]
+        if min_value is not None and decimal_value < min_value:
+            raise TreeError("Значение параметра меньше минимально допустимого")
+        if max_value is not None and decimal_value > max_value:
+            raise TreeError("Значение параметра больше максимально допустимого")
+        values["val_int"] = val_int
+        return values
+
+    if parameter_type == "real":
+        if val_real is None:
+            raise TreeError("Для параметра real нужно передать val_real")
+        min_value = category_parameter["min_value"]
+        max_value = category_parameter["max_value"]
+        if min_value is not None and val_real < min_value:
+            raise TreeError("Значение параметра меньше минимально допустимого")
+        if max_value is not None and val_real > max_value:
+            raise TreeError("Значение параметра больше максимально допустимого")
+        values["val_real"] = val_real
+        return values
+
+    if parameter_type == "string":
+        if val_str is None:
+            raise TreeError("Для параметра string нужно передать val_str")
+        normalized = val_str.strip()
+        if not normalized:
+            raise TreeError("Строковое значение параметра не должно быть пустым")
+        values["val_str"] = normalized
+        return values
+
+    if parameter_type == "datetime":
+        if val_datetime is None:
+            raise TreeError("Для параметра datetime нужно передать val_datetime")
+        values["val_datetime"] = val_datetime
+        return values
+
+    if parameter_type == "enum":
+        if enum_value_id is None:
+            raise TreeError("Для параметра enum нужно передать enum_value_id")
+        enum_value = await _get_enumeration_value_row(session, enum_value_id)
+        if enum_value is None:
+            raise TreeError(f"Значение перечисления с id={enum_value_id} не найдено")
+        if enum_value["item_type"] != "value":
+            raise TreeError("Параметр enum должен ссылаться на конечное значение перечисления")
+        if int(enum_value["enum_id"]) != int(parameter["enum_id"]):
+            raise TreeError("Значение перечисления не относится к перечислению параметра")
+        values["enum_value_id"] = enum_value_id
+        return values
+
+    raise TreeError("Недопустимый тип параметра")
+
+
+async def set_product_parameter_value(
+    *,
+    product_id: int,
+    parameter_id: int,
+    val_real: Decimal | None = None,
+    val_int: int | None = None,
+    val_str: str | None = None,
+    val_datetime: datetime | None = None,
+    enum_value_id: int | None = None,
+) -> dict[str, object]:
+    async with get_session_factory()() as session:
+        product = await _get_product_row(session, product_id)
+        if product is None:
+            raise TreeError(f"Комплектующее с id={product_id} не найдено")
+        parameter = await _get_parameter_row(session, parameter_id)
+        if parameter is None:
+            raise TreeError(f"Параметр с id={parameter_id} не найден")
+        category_parameter = await _get_category_parameter_for_value(
+            session,
+            category_id=int(product["category_id"]),
+            parameter_id=parameter_id,
+        )
+        if category_parameter is None:
+            raise TreeError("Параметр не назначен категории данного изделия")
+
+        values = await _validate_product_parameter_value(
+            session,
+            product=product,
+            parameter=parameter,
+            category_parameter=category_parameter,
+            val_real=val_real,
+            val_int=val_int,
+            val_str=val_str,
+            val_datetime=val_datetime,
+            enum_value_id=enum_value_id,
+        )
+
+        existing_value = await _get_product_parameter_value_row(
+            session,
+            product_id=product_id,
+            parameter_id=parameter_id,
+        )
+        if existing_value is None:
+            result = await session.execute(
+                insert(product_parameter_values_table)
+                .values(product_id=product_id, parameter_id=parameter_id, **values)
+                .returning(product_parameter_values_table.c.id)
+            )
+            value_id = int(result.scalar_one())
+        else:
+            value_id = int(existing_value["id"])
+            await session.execute(
+                update(product_parameter_values_table)
+                .where(product_parameter_values_table.c.id == value_id)
+                .values(**values)
+            )
+        await session.commit()
+
+    values = await list_product_parameter_values(product_id)
+    for value in values:
+        if int(value["id"]) == value_id:
+            return value
+    raise RuntimeError("Product parameter value not found after save")
+
+
+async def list_product_parameter_values(product_id: int) -> list[dict[str, object]]:
+    async with get_session_factory()() as session:
+        product = await _get_product_row(session, product_id)
+        if product is None:
+            raise TreeError(f"Комплектующее с id={product_id} не найдено")
+
+        result = await session.execute(
+            select(
+                product_parameter_values_table,
+                parameters_table.c.code,
+                parameters_table.c.name,
+                parameters_table.c.description,
+                parameters_table.c.parameter_type,
+                parameters_table.c.unit_id,
+                parameters_table.c.enum_id,
+            )
+            .join(parameters_table, parameters_table.c.id == product_parameter_values_table.c.parameter_id)
+            .where(product_parameter_values_table.c.product_id == product_id)
+            .order_by(parameters_table.c.code)
+        )
+        return [_row_to_product_parameter_value_dict(row) for row in result.mappings().all()]
+
+
+async def delete_product_parameter_value(product_id: int, parameter_id: int) -> None:
+    async with get_session_factory()() as session:
+        product = await _get_product_row(session, product_id)
+        if product is None:
+            raise TreeError(f"Комплектующее с id={product_id} не найдено")
+        parameter_value = await _get_product_parameter_value_row(
+            session,
+            product_id=product_id,
+            parameter_id=parameter_id,
+        )
+        if parameter_value is None:
+            raise TreeError("Значение параметра изделия не найдено")
+        await session.execute(
+            delete(product_parameter_values_table).where(
+                product_parameter_values_table.c.id == int(parameter_value["id"])
+            )
+        )
+        await session.commit()
+
+
+async def _product_matches_parameter_filter(
+    value: dict[str, object] | None,
+    parameter,
+    raw_filter: dict[str, object],
+) -> bool:
+    if value is None:
+        return False
+
+    operator = str(raw_filter.get("operator", "eq"))
+    parameter_type = str(parameter["parameter_type"])
+
+    if parameter_type == "integer":
+        actual = value["val_int"]
+        expected = raw_filter.get("val_int")
+    elif parameter_type == "real":
+        actual = value["val_real"]
+        expected = raw_filter.get("val_real")
+    elif parameter_type == "string":
+        actual = value["val_str"]
+        expected = raw_filter.get("val_str")
+    elif parameter_type == "datetime":
+        actual = value["val_datetime"]
+        expected = raw_filter.get("val_datetime")
+    elif parameter_type == "enum":
+        actual = value["enum_value_id"]
+        expected = raw_filter.get("enum_value_id")
+    else:
+        return False
+
+    if actual is None or expected is None:
+        return False
+
+    if operator == "eq":
+        return actual == expected
+    if operator == "contains" and parameter_type == "string":
+        return str(expected).lower() in str(actual).lower()
+    if operator == "gte" and parameter_type in {"integer", "real", "datetime"}:
+        return actual >= expected
+    if operator == "lte" and parameter_type in {"integer", "real", "datetime"}:
+        return actual <= expected
+    raise TreeError("Недопустимый оператор фильтра для типа параметра")
+
+
+async def list_products_by_category_with_parameters(category_id: int) -> list[dict[str, object]]:
+    async with get_session_factory()() as session:
+        category = await _get_category_row(session, category_id)
+        if category is None:
+            raise TreeError(f"Категория с id={category_id} не найдена")
+
+        products_result = await session.execute(
+            select(products_table)
+            .where(products_table.c.category_id == category_id)
+            .order_by(products_table.c.name)
+        )
+        products = products_result.mappings().all()
+
+    result: list[dict[str, object]] = []
+    for product in products:
+        product_payload = await get_product(int(product["id"]))
+        product_payload["parameter_values"] = await list_product_parameter_values(int(product["id"]))
+        result.append(product_payload)
+    return result
+
+
+async def filter_products_by_parameters(
+    *,
+    category_id: int,
+    filters: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    async with get_session_factory()() as session:
+        category = await _get_category_row(session, category_id)
+        if category is None:
+            raise TreeError(f"Категория с id={category_id} не найдена")
+
+        parameter_ids = [int(raw_filter["parameter_id"]) for raw_filter in filters]
+        parameters_by_id: dict[int, object] = {}
+        for parameter_id in parameter_ids:
+            parameter = await _get_parameter_row(session, parameter_id)
+            if parameter is None:
+                raise TreeError(f"Параметр с id={parameter_id} не найден")
+            category_parameter = await _get_category_parameter_for_value(
+                session,
+                category_id=category_id,
+                parameter_id=parameter_id,
+            )
+            if category_parameter is None:
+                raise TreeError(f"Параметр id={parameter_id} не назначен категории id={category_id}")
+            parameters_by_id[parameter_id] = parameter
+
+    products = await list_products_by_category_with_parameters(category_id)
+    filtered_products: list[dict[str, object]] = []
+
+    for product in products:
+        values_by_parameter_id = {
+            int(value["parameter_id"]): value for value in product["parameter_values"]
+        }
+        matched = True
+        for raw_filter in filters:
+            parameter_id = int(raw_filter["parameter_id"])
+            if not await _product_matches_parameter_filter(
+                values_by_parameter_id.get(parameter_id),
+                parameters_by_id[parameter_id],
+                raw_filter,
+            ):
+                matched = False
+                break
+        if matched:
+            filtered_products.append(product)
+
+    return filtered_products
 
 
 async def list_categories() -> list[dict[str, object]]:
@@ -1234,6 +2162,12 @@ async def delete_enumeration(enumeration_id: int) -> None:
         enumeration = await _get_enumeration_row(session, enumeration_id)
         if enumeration is None:
             raise TreeError(f"Нельзя удалить перечисление: id={enumeration_id} не найден")
+
+        used_parameter_id = await session.scalar(
+            select(parameters_table.c.id).where(parameters_table.c.enum_id == enumeration_id)
+        )
+        if used_parameter_id is not None:
+            raise TreeError("Нельзя удалить перечисление: оно используется в параметрах")
 
         await session.execute(
             delete(enumerations_table).where(enumerations_table.c.id == enumeration_id)
@@ -1451,6 +2385,14 @@ async def delete_enumeration_value(value_id: int) -> None:
         enumeration_value = await _get_enumeration_value_row(session, value_id)
         if enumeration_value is None:
             raise TreeError(f"Нельзя удалить значение перечисления: id={value_id} не найден")
+
+        used_product_value_id = await session.scalar(
+            select(product_parameter_values_table.c.id).where(
+                product_parameter_values_table.c.enum_value_id == value_id
+            )
+        )
+        if used_product_value_id is not None:
+            raise TreeError("Нельзя удалить значение перечисления: оно используется в параметрах изделий")
 
         await session.execute(
             delete(enumeration_values_table).where(enumeration_values_table.c.id == value_id)

@@ -8,6 +8,7 @@ REST API для классификатора комплектующих ПК и 
 - хранение конечных комплектующих в таблице `products`;
 - хранение справочника уникальных характеристик в таблице `specifications`;
 - хранение справочника единиц измерения в таблице `measurement_units`;
+- хранение справочника параметров изделий в таблице `parameters`;
 - хранение классификаторов в таблице `enumerations`;
 - хранение значений классификаторов в таблице `enumeration_values`;
 - связь many-to-many между товарами и характеристиками через `product_specifications`;
@@ -31,6 +32,12 @@ REST API для классификатора комплектующих ПК и 
   хранит уникальные характеристики в формате `name + value` или `name + enum_value_id`;
 - `measurement_units`
   хранит единицы измерения: полное название, сокращенное название и описание;
+- `parameters`
+  хранит метаданные параметров изделий: код, название, тип, единицу измерения или перечисление;
+- `category_parameters`
+  хранит состав параметров классов изделий, порядок, обязательность и числовые ограничения;
+- `product_parameter_values`
+  хранит значения параметров конкретных изделий в отдельных полях по типам;
 - `enumerations`
   хранит сами классификаторы;
 - `enumeration_values`
@@ -140,6 +147,120 @@ uvicorn src.main:app --reload
   "full_name": "нанометры",
   "short_name": "нм",
   "description": "Единица измерения длины"
+}
+```
+
+### Параметры изделий
+
+- `GET /database/parameters` — получить список параметров
+- `POST /database/parameters` — создать параметр
+- `GET /database/parameters/{parameter_id}` — получить параметр
+- `PATCH /database/parameters/{parameter_id}` — изменить параметр
+- `DELETE /database/parameters/{parameter_id}` — удалить параметр
+
+Пример числового параметра:
+
+```json
+{
+  "code": "tech_process",
+  "name": "Техпроцесс",
+  "description": "Технологический процесс производства",
+  "parameter_type": "integer",
+  "unit_id": 1,
+  "enum_id": null
+}
+```
+
+Пример параметра-перечисления:
+
+```json
+{
+  "code": "socket",
+  "name": "Сокет",
+  "description": "Процессорный разъем",
+  "parameter_type": "enum",
+  "unit_id": null,
+  "enum_id": 1
+}
+```
+
+### Параметры категорий
+
+- `GET /database/categories/{category_id}/parameters` — получить параметры категории
+- `POST /database/categories/{category_id}/parameters` — назначить параметр категории
+- `PATCH /database/category-parameters/{category_parameter_id}` — изменить настройки параметра категории
+- `DELETE /database/category-parameters/{category_parameter_id}` — удалить параметр из категории
+- `POST /database/categories/{category_id}/parameters/copy-from-parent` — скопировать параметры родителя
+
+Пример назначения числового параметра категории:
+
+```json
+{
+  "parameter_id": 1,
+  "priority": 10,
+  "is_required": true,
+  "min_value": 1,
+  "max_value": 100
+}
+```
+
+### Значения параметров изделий
+
+- `GET /database/products/{product_id}/parameters` — получить значения параметров изделия
+- `PUT /database/products/{product_id}/parameters/{parameter_id}` — записать или обновить значение параметра изделия
+- `DELETE /database/products/{product_id}/parameters/{parameter_id}` — удалить значение параметра изделия
+- `GET /database/categories/{category_id}/products-with-parameters` — получить изделия категории со значениями параметров
+- `POST /database/categories/{category_id}/products/search` — отфильтровать изделия категории по значениям параметров
+
+Пример целочисленного значения:
+
+```json
+{
+  "val_int": 8
+}
+```
+
+Пример вещественного значения:
+
+```json
+{
+  "val_real": 3.5
+}
+```
+
+Пример значения-перечисления:
+
+```json
+{
+  "enum_value_id": 1
+}
+```
+
+Пример фильтрации по числовому параметру:
+
+```json
+{
+  "filters": [
+    {
+      "parameter_id": 2,
+      "operator": "gte",
+      "val_int": 8
+    }
+  ]
+}
+```
+
+Пример фильтрации по перечислению:
+
+```json
+{
+  "filters": [
+    {
+      "parameter_id": 1,
+      "operator": "eq",
+      "enum_value_id": 3
+    }
+  ]
 }
 ```
 

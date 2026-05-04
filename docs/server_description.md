@@ -29,6 +29,21 @@
 | `GET` | `/database/measurement-units/{unit_id}` | Получить единицу измерения |
 | `PATCH` | `/database/measurement-units/{unit_id}` | Изменить единицу измерения |
 | `DELETE` | `/database/measurement-units/{unit_id}` | Удалить единицу измерения |
+| `GET` | `/database/parameters` | Получить список параметров изделий |
+| `POST` | `/database/parameters` | Создать параметр изделия |
+| `GET` | `/database/parameters/{parameter_id}` | Получить параметр изделия |
+| `PATCH` | `/database/parameters/{parameter_id}` | Изменить параметр изделия |
+| `DELETE` | `/database/parameters/{parameter_id}` | Удалить параметр изделия |
+| `GET` | `/database/categories/{category_id}/parameters` | Получить параметры категории |
+| `POST` | `/database/categories/{category_id}/parameters` | Назначить параметр категории |
+| `PATCH` | `/database/category-parameters/{category_parameter_id}` | Изменить настройки параметра категории |
+| `DELETE` | `/database/category-parameters/{category_parameter_id}` | Удалить параметр из категории |
+| `POST` | `/database/categories/{category_id}/parameters/copy-from-parent` | Скопировать параметры родительской категории |
+| `GET` | `/database/products/{product_id}/parameters` | Получить значения параметров изделия |
+| `PUT` | `/database/products/{product_id}/parameters/{parameter_id}` | Записать значение параметра изделия |
+| `DELETE` | `/database/products/{product_id}/parameters/{parameter_id}` | Удалить значение параметра изделия |
+| `GET` | `/database/categories/{category_id}/products-with-parameters` | Получить изделия категории со значениями параметров |
+| `POST` | `/database/categories/{category_id}/products/search` | Отфильтровать изделия категории по параметрам |
 | `GET` | `/database/categories` | Получить список категорий |
 | `GET` | `/database/categories/{category_id}` | Получить категорию |
 | `POST` | `/database/categories` | Создать новую вершину классификатора |

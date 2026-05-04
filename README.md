@@ -7,12 +7,14 @@ REST API для классификатора комплектующих ПК и 
 - хранение дерева категорий в таблице `categories`;
 - хранение конечных комплектующих в таблице `products`;
 - хранение справочника уникальных характеристик в таблице `specifications`;
+- хранение справочника единиц измерения в таблице `measurement_units`;
 - хранение классификаторов в таблице `enumerations`;
 - хранение значений классификаторов в таблице `enumeration_values`;
 - связь many-to-many между товарами и характеристиками через `product_specifications`;
 - создание, изменение, удаление и перемещение категорий;
 - создание, изменение, удаление и перемещение товаров;
 - создание, изменение, удаление перечислений и их значений;
+- добавление одних перечислений внутрь других перечислений;
 - получение полного дерева классификатора через API;
 - переиспользование спецификаций по `id` или автоматическое создание новых;
 - Swagger UI для тестирования запросов.
@@ -27,10 +29,12 @@ REST API для классификатора комплектующих ПК и 
   хранит конечные комплектующие;
 - `specifications`
   хранит уникальные характеристики в формате `name + value` или `name + enum_value_id`;
+- `measurement_units`
+  хранит единицы измерения: полное название, сокращенное название и описание;
 - `enumerations`
   хранит сами классификаторы;
 - `enumeration_values`
-  хранит значения классификаторов и их порядок;
+  хранит конечные значения классификаторов и ссылки на вложенные перечисления;
 - `product_specifications`
   хранит связи между товарами и характеристиками.
 
@@ -74,6 +78,8 @@ uvicorn src.main:app --reload
 
 ### Категории
 
+- `GET /database/categories` — получить список категорий
+- `GET /database/categories/{category_id}` — получить категорию
 - `POST /database/categories` — создать категорию
 - `PATCH /database/categories/{category_id}` — переименовать категорию
 - `PATCH /database/categories/{category_id}/move` — переместить категорию
@@ -92,6 +98,8 @@ uvicorn src.main:app --reload
 
 ### Товары
 
+- `GET /database/products` — получить список товаров
+- `GET /database/products/{product_id}` — получить товар
 - `POST /database/products` — создать товар
 - `PATCH /database/products/{product_id}` — изменить товар
 - `PATCH /database/products/{product_id}/move` — переместить товар
@@ -117,12 +125,37 @@ uvicorn src.main:app --reload
 
 - `GET /database/specifications` — получить справочник всех уникальных спецификаций
 
+### Единицы измерения
+
+- `GET /database/measurement-units` — получить список единиц измерения
+- `POST /database/measurement-units` — создать единицу измерения
+- `GET /database/measurement-units/{unit_id}` — получить единицу измерения
+- `PATCH /database/measurement-units/{unit_id}` — изменить единицу измерения
+- `DELETE /database/measurement-units/{unit_id}` — удалить единицу измерения
+
+Пример создания единицы измерения:
+
+```json
+{
+  "full_name": "нанометры",
+  "short_name": "нм",
+  "description": "Единица измерения длины"
+}
+```
+
 Пример ответа:
 
 ```json
 [
-  { "id": 1, "name": "socket", "value": "AM4", "enum_value_id": null },
-  { "id": 2, "name": "form_factor", "value": null, "enum_value_id": 3 }
+  {
+    "id": 1,
+    "name": "tech_process",
+    "value": "3",
+    "enum_value_id": null,
+    "unit_id": 1,
+    "custom_unit_full_name": null,
+    "custom_unit_short_name": null
+  }
 ]
 ```
 
@@ -134,6 +167,27 @@ uvicorn src.main:app --reload
 {
   "name": "socket",
   "value": "AM4"
+}
+```
+
+Спецификация со ссылкой на единицу измерения из справочника:
+
+```json
+{
+  "name": "tech_process",
+  "value": "3",
+  "unit_id": 1
+}
+```
+
+Спецификация с частной единицей измерения, которая не добавляется в общий справочник:
+
+```json
+{
+  "name": "custom_length",
+  "value": "12",
+  "custom_unit_full_name": "условные единицы",
+  "custom_unit_short_name": "у.е."
 }
 ```
 
@@ -179,9 +233,9 @@ uvicorn src.main:app --reload
 - `PATCH /database/enumerations/{enumeration_id}` — изменить перечисление
 - `DELETE /database/enumerations/{enumeration_id}` — удалить перечисление
 - `GET /database/enumerations/{enumeration_id}/values` — получить значения перечисления
-- `POST /database/enumerations/{enumeration_id}/values` — добавить значение в перечисление
-- `PATCH /database/enumeration-values/{value_id}` — изменить значение перечисления
-- `DELETE /database/enumeration-values/{value_id}` — удалить значение перечисления
+- `POST /database/enumerations/{enumeration_id}/values` — добавить конечное значение или вложенное перечисление
+- `PATCH /database/enumeration-values/{value_id}` — изменить элемент перечисления
+- `DELETE /database/enumeration-values/{value_id}` — удалить элемент перечисления
 
 Пример создания перечисления:
 
@@ -196,9 +250,21 @@ uvicorn src.main:app --reload
 
 ```json
 {
+  "item_type": "value",
   "value": "ATX",
   "priority": 10,
   "description": "Стандартный полноразмерный форм-фактор"
+}
+```
+
+Пример добавления другого перечисления внутрь перечисления:
+
+```json
+{
+  "item_type": "enum",
+  "child_enum_id": 2,
+  "priority": 20,
+  "description": "Вложенный классификатор совместимых форм-факторов"
 }
 ```
 
@@ -227,7 +293,9 @@ uvicorn src.main:app --reload
 - передан несуществующий `specification_id`;
 - передан несуществующий `enum_value_id`;
 - создается перечисление с уже существующим именем;
-- создается дублирующееся значение внутри одного перечисления.
+- создается дублирующееся значение внутри одного перечисления;
+- перечисление добавляется внутрь самого себя;
+- добавление вложенного перечисления создает цикл.
 
 ## Полезные файлы проекта
 

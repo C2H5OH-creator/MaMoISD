@@ -23,8 +23,26 @@ class SpecificationPayload(BaseModel):
         examples=[1],
         description="ID значения классификатора, если характеристика использует перечисление.",
     )
+    unit_id: int | None = Field(
+        default=None,
+        gt=0,
+        examples=[1],
+        description="ID единицы измерения из справочника.",
+    )
+    custom_unit_full_name: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=255,
+        examples=["нанометры"],
+    )
+    custom_unit_short_name: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=50,
+        examples=["нм"],
+    )
 
-    @field_validator("name", "value")
+    @field_validator("name", "value", "custom_unit_full_name", "custom_unit_short_name")
     @classmethod
     def validate_not_blank(cls, value: str | None) -> str | None:
         if value is None:
@@ -37,9 +55,16 @@ class SpecificationPayload(BaseModel):
     @model_validator(mode="after")
     def validate_payload(self):
         if self.specification_id is not None:
-            if self.name is not None or self.value is not None or self.enum_value_id is not None:
+            if (
+                self.name is not None
+                or self.value is not None
+                or self.enum_value_id is not None
+                or self.unit_id is not None
+                or self.custom_unit_full_name is not None
+                or self.custom_unit_short_name is not None
+            ):
                 raise ValueError(
-                    "Нужно передавать либо specification_id, либо name/value, либо name/enum_value_id"
+                    "Нужно передавать либо specification_id, либо новую спецификацию"
                 )
             return self
 
@@ -53,6 +78,21 @@ class SpecificationPayload(BaseModel):
             raise ValueError(
                 "Для новой спецификации нужно передать либо value, либо enum_value_id"
             )
+
+        has_unit_id = self.unit_id is not None
+        has_custom_unit = (
+            self.custom_unit_full_name is not None or self.custom_unit_short_name is not None
+        )
+        if has_enum_value and (has_unit_id or has_custom_unit):
+            raise ValueError("Единицу измерения можно передавать только для value")
+        if has_unit_id and has_custom_unit:
+            raise ValueError("Нужно передавать либо unit_id, либо кастомную единицу измерения")
+        if has_custom_unit and (
+            self.custom_unit_full_name is None or self.custom_unit_short_name is None
+        ):
+            raise ValueError(
+                "Для кастомной единицы нужно передать custom_unit_full_name и custom_unit_short_name"
+            )
         return self
 
 
@@ -61,6 +101,50 @@ class SpecificationResponse(BaseModel):
     name: str
     value: str | None
     enum_value_id: int | None
+    unit_id: int | None
+    custom_unit_full_name: str | None
+    custom_unit_short_name: str | None
+
+
+class MeasurementUnitBaseRequest(BaseModel):
+    full_name: str = Field(min_length=1, max_length=255, examples=["нанометры"])
+    short_name: str = Field(min_length=1, max_length=50, examples=["нм"])
+    description: str | None = Field(
+        default=None,
+        max_length=1000,
+        examples=["Единица измерения длины, равная одной миллиардной части метра"],
+    )
+
+    @field_validator("full_name", "short_name")
+    @classmethod
+    def validate_not_blank(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Поле не должно быть пустым")
+        return normalized
+
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
+
+
+class MeasurementUnitCreateRequest(MeasurementUnitBaseRequest):
+    pass
+
+
+class MeasurementUnitUpdateRequest(MeasurementUnitBaseRequest):
+    pass
+
+
+class MeasurementUnitResponse(BaseModel):
+    id: int
+    full_name: str
+    short_name: str
+    description: str | None
 
 
 class EnumerationBaseRequest(BaseModel):
@@ -97,7 +181,14 @@ class EnumerationUpdateRequest(EnumerationBaseRequest):
 
 
 class EnumerationValueBaseRequest(BaseModel):
-    value: str = Field(min_length=1, max_length=255, examples=["ATX"])
+    item_type: str = Field(default="value", examples=["value"])
+    value: str | None = Field(default=None, min_length=1, max_length=255, examples=["ATX"])
+    child_enum_id: int | None = Field(
+        default=None,
+        gt=0,
+        examples=[2],
+        description="ID вложенного перечисления, если элемент имеет тип enum.",
+    )
     priority: int = Field(default=0, ge=0, examples=[10])
     description: str | None = Field(
         default=None,
@@ -105,9 +196,19 @@ class EnumerationValueBaseRequest(BaseModel):
         examples=["Стандартный полноразмерный форм-фактор"],
     )
 
+    @field_validator("item_type")
+    @classmethod
+    def validate_item_type(cls, value: str) -> str:
+        normalized = value.strip()
+        if normalized not in {"value", "enum"}:
+            raise ValueError("item_type должен быть value или enum")
+        return normalized
+
     @field_validator("value")
     @classmethod
-    def validate_value(cls, value: str) -> str:
+    def validate_value(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
         normalized = value.strip()
         if not normalized:
             raise ValueError("Значение перечисления не должно быть пустым")
@@ -120,6 +221,17 @@ class EnumerationValueBaseRequest(BaseModel):
             return None
         normalized = value.strip()
         return normalized or None
+
+    @model_validator(mode="after")
+    def validate_payload(self):
+        if self.item_type == "value":
+            if self.value is None or self.child_enum_id is not None:
+                raise ValueError("Для item_type=value нужно передать только value")
+            return self
+
+        if self.value is not None or self.child_enum_id is None:
+            raise ValueError("Для item_type=enum нужно передать только child_enum_id")
+        return self
 
 
 class EnumerationValueCreateRequest(EnumerationValueBaseRequest):
@@ -141,7 +253,11 @@ class EnumerationResponse(BaseModel):
 class EnumerationValueResponse(BaseModel):
     id: int
     enum_id: int
-    value: str
+    item_type: str
+    value: str | None
+    child_enum_id: int | None
+    child_name: str | None
+    child_description: str | None
     priority: int
     description: str | None
     created_at: datetime

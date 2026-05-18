@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mispris Market</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Mispris Market">
+          <span class="brand-mark">M</span>
+          <span>
+            <strong>Mispris Market</strong>
+            <small>справочник электроники</small>
+          </span>
+        </a>
+        <nav class="nav">
+          <a href="#catalog">Каталог</a>
+          <a href="#products">Товары</a>
+          <a href="#cart">Корзина <span class="nav-badge cart-count">0</span></a>
+          <a href="#admin">Админка</a>
+          <a href="/docs">API</a>
+        </nav>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow">Курсовой web UI</p>
+            <h1>Маркетплейс комплектующих на базе настраиваемого справочника</h1>
+            <p class="hero-text">
+              Категории, товары, характеристики, перечисления и единицы измерения
+              подтягиваются из существующего FastAPI backend.
+            </p>
+            <div class="hero-actions">
+              <a class="button primary" href="#catalog">Открыть каталог</a>
+              <a class="button secondary" href="/docs">Swagger API</a>
+            </div>
+          </div>
+          <aside class="hero-card">
+            <span class="chip">live data</span>
+            <h2 id="statsTitle">Загрузка данных</h2>
+            <dl class="stats">
+              <div>
+                <dt>Категорий</dt>
+                <dd id="categoriesCount">...</dd>
+              </div>
+              <div>
+                <dt>Товаров</dt>
+                <dd id="productsCount">...</dd>
+              </div>
+              <div>
+                <dt>Спецификаций</dt>
+                <dd id="specsCount">...</dd>
+              </div>
+            </dl>
+          </aside>
+        </section>
+
+        <section id="catalog" class="section">
+          <div class="section-head">
+            <p class="eyebrow">Классификатор</p>
+            <h2>Категории</h2>
+          </div>
+          <div id="categoryGrid" class="category-grid"></div>
+        </section>
+
+        <section id="products" class="section">
+          <div class="section-head">
+            <p class="eyebrow">Витрина</p>
+            <h2>Товары</h2>
+          </div>
+
+          <div class="filters" aria-label="Фильтры витрины">
+            <div class="filter-head">
+              <div>
+                <p class="eyebrow">Фильтры</p>
+                <h3>Отбор товаров</h3>
+              </div>
+              <div class="filter-actions">
+                <button id="applyFiltersButton" class="button primary" type="button">Фильтровать</button>
+                <button id="resetFiltersButton" class="button secondary" type="button">Сбросить</button>
+              </div>
+            </div>
+
+            <div class="filter-grid">
+              <label class="wide-filter">
+                <span>Поиск</span>
+                <input id="searchInput" type="search" placeholder="Ryzen, ATX, процессор..." />
+              </label>
+              <label class="wide-filter">
+                <span>Категория</span>
+                <select id="categorySelect">
+                  <option value="">Все категории</option>
+                </select>
+              </label>
+              <label>
+                <span>Цена от</span>
+                <input id="minPriceInput" type="number" step="0.01" placeholder="Минимальная" />
+              </label>
+              <label>
+                <span>Цена до</span>
+                <input id="maxPriceInput" type="number" step="0.01" placeholder="Максимальная" />
+              </label>
+              <label>
+                <span>Характеристика</span>
+                <select id="specFilterSelect">
+                  <option value="">Любая характеристика</option>
+                </select>
+              </label>
+              <label>
+                <span>Значение характеристики</span>
+                <input id="specValueInput" type="search" placeholder="Например: 8 GB, ATX, AM5" />
+              </label>
+              <label>
+                <span>Сортировка</span>
+                <select id="sortSelect">
+                  <option value="default">По умолчанию</option>
+                  <option value="price-asc">Цена по возрастанию</option>
+                  <option value="price-desc">Цена по убыванию</option>
+                  <option value="name-asc">Название А-Я</option>
+                  <option value="quantity-desc">Сначала в наличии</option>
+                </select>
+              </label>
+              <label class="checkbox-filter">
+                <input id="inStockInput" type="checkbox" />
+                <span>Только товары в наличии</span>
+              </label>
+            </div>
+
+            <p id="filterSummary" class="filter-summary">Фильтры не применены.</p>
+          </div>
+
+          <div id="productGrid" class="product-grid"></div>
+          <p id="emptyProducts" class="empty" hidden>Товары не найдены.</p>
+        </section>
+
+        <section id="cart" class="section cart-panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Покупка</p>
+              <h2>Корзина</h2>
+            </div>
+            <button id="clearCartButton" class="button secondary" type="button">Очистить корзину</button>
+          </div>
+          <div id="cartItems" class="cart-items"></div>
+          <p id="emptyCart" class="empty">Корзина пока пустая.</p>
+          <div class="cart-summary">
+            <span>Итого</span>
+            <strong id="cartTotal">0 ₽</strong>
+            <button id="checkoutButton" class="button primary" type="button" disabled>Заказать</button>
+          </div>
+        </section>
+
+        <section id="admin" class="section admin-panel">
+          <div>
+            <p class="eyebrow">Управление</p>
+            <h2>Быстрое добавление</h2>
+            <p>
+              Эти формы используют существующие POST endpoint'ы backend. Более
+              сложные операции редактирования пока доступны через Swagger.
+            </p>
+            <p id="adminMessage" class="admin-message" role="status"></p>
+          </div>
+
+          <div class="admin-forms">
+            <form id="categoryForm" class="admin-form">
+              <h3 id="categoryFormTitle">Новая категория</h3>
+              <label>
+                <span>Название</span>
+                <input name="name" type="text" minlength="1" maxlength="255" required placeholder="Видеокарты" />
+              </label>
+              <label>
+                <span>Родитель</span>
+                <select id="parentCategorySelect" name="parent_id">
+                  <option value="">Корневой раздел</option>
+                </select>
+              </label>
+              <div class="form-actions">
+                <button id="categorySubmitButton" class="button primary" type="submit">Создать категорию</button>
+                <button id="categoryCancelButton" class="button ghost" type="button" hidden>Отмена</button>
+              </div>
+            </form>
+
+            <form id="productForm" class="admin-form">
+              <h3 id="productFormTitle">Новый товар</h3>
+              <label>
+                <span>Название</span>
+                <input name="name" type="text" minlength="1" maxlength="255" required placeholder="AMD Ryzen 7 5700X" />
+              </label>
+              <label>
+                <span>Категория</span>
+                <select id="productCategorySelect" name="category_id" required>
+                  <option value="">Выберите категорию</option>
+                </select>
+              </label>
+              <div class="form-row">
+                <label>
+                  <span>Цена</span>
+                  <input name="price" type="number" min="0" step="0.01" required placeholder="14990" />
+                </label>
+                <label>
+                  <span>Остаток</span>
+                  <input name="quantity" type="number" min="0" step="1" required placeholder="7" />
+                </label>
+              </div>
+              <label>
+                <span>Описание</span>
+                <textarea name="description" maxlength="1000" rows="3" placeholder="8 ядер, 16 потоков"></textarea>
+              </label>
+              <div class="form-actions">
+                <button id="productSubmitButton" class="button primary" type="submit">Создать товар</button>
+                <button id="productCancelButton" class="button ghost" type="button" hidden>Отмена</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="admin-links">
+            <a href="/docs#/database-categories">Swagger: категории</a>
+            <a href="/docs#/database-products">Swagger: товары</a>
+            <a href="/docs#/database-parameters">Swagger: параметры</a>
+            <a href="/docs#/database-enumerations">Swagger: перечисления</a>
+            <a href="/docs#/database-measurement-units">Swagger: единицы</a>
+          </div>
+        </section>
+      </main>
+    </div>
+    <nav class="mobile-nav" aria-label="Мобильная навигация">
+      <a href="#catalog">
+        <span>▦</span>
+        <strong>Каталог</strong>
+      </a>
+      <a href="#products">
+        <span>⌕</span>
+        <strong>Товары</strong>
+      </a>
+      <a href="#cart">
+        <span>⌑</span>
+        <strong>Корзина</strong>
+        <em class="nav-badge cart-count">0</em>
+      </a>
+      <a href="#admin">
+        <span>⚙</span>
+        <strong>Админ</strong>
+      </a>
+      <a href="/docs">
+        <span>?</span>
+        <strong>API</strong>
+      </a>
+    </nav>
+    <div id="toast" class="toast" role="alert" hidden></div>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>

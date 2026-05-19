@@ -791,8 +791,11 @@ textarea:focus {
 }
 
 .spec-row .button {
+  align-items: center;
+  justify-content: center;
   min-height: 48px;
   padding: 0 12px;
+  text-align: center;
 }
 
 .compact-list {

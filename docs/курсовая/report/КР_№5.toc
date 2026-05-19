@@ -15,9 +15,7 @@
 \contentsline {subsubsection}{\numberline {2.2.5}Тестирование приложения}{13}{subsubsection.2.2.5}%
 \contentsline {subsection}{\numberline {2.3}Разработка пользовательского интерфейса}{23}{subsection.2.3}%
 \contentsline {subsubsection}{\numberline {2.3.1}Информационная архитектура}{23}{subsubsection.2.3.1}%
-\contentsline {subsubsection}{\numberline {2.3.2}Диаграмма потоков задач}{23}{subsubsection.2.3.2}%
-\contentsline {subsubsection}{\numberline {2.3.3}Выбор цветов и шрифтов}{24}{subsubsection.2.3.3}%
-\contentsline {subsubsection}{\numberline {2.3.4}Страницы интерфейса}{24}{subsubsection.2.3.4}%
-\contentsline {section}{\numberline {3}Заключение}{26}{section.3}%
-\contentsline {section}{\numberline {A}Приложение А. Скриншоты интерфейса}{28}{appendix.A}%
-\contentsline {section}{\numberline {B}Приложение Б. Фрагменты программного кода}{29}{appendix.B}%
+\contentsline {subsubsection}{\numberline {2.3.2}Диаграмма потоков задач}{25}{subsubsection.2.3.2}%
+\contentsline {subsubsection}{\numberline {2.3.3}Выбор цветов и шрифтов}{25}{subsubsection.2.3.3}%
+\contentsline {subsubsection}{\numberline {2.3.4}Страницы интерфейса}{26}{subsubsection.2.3.4}%
+\contentsline {section}{\numberline {3}Заключение}{34}{section.3}%

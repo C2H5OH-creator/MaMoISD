@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999998 (TeX Live 2026/Arch Linux) (preloaded format=xelatex 2026.4.14)  20 MAY 2026 01:57
+This is XeTeX, Version 3.141592653-2.6-0.999998 (TeX Live 2026/Arch Linux) (preloaded format=xelatex 2026.4.14)  20 MAY 2026 02:32
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -731,26 +731,26 @@ Package babel Info: 'russian' activates 'russian' shorthands.
 )
 \openout1 = `КР_№5.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 40.
-LaTeX Font Info:    ... okay on input line 40.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: xetex
@@ -793,69 +793,69 @@ Package fontspec Info:
 
 \symlegacymaths=\mathgroup4
 LaTeX Font Info:    Overwriting symbol font `legacymaths' in version `bold'
-(Font)                  OT1/cmr/m/n --> OT1/cmr/bx/n on input line 40.
-LaTeX Font Info:    Redeclaring math accent \acute on input line 40.
-LaTeX Font Info:    Redeclaring math accent \grave on input line 40.
-LaTeX Font Info:    Redeclaring math accent \ddot on input line 40.
-LaTeX Font Info:    Redeclaring math accent \tilde on input line 40.
-LaTeX Font Info:    Redeclaring math accent \bar on input line 40.
-LaTeX Font Info:    Redeclaring math accent \breve on input line 40.
-LaTeX Font Info:    Redeclaring math accent \check on input line 40.
-LaTeX Font Info:    Redeclaring math accent \hat on input line 40.
-LaTeX Font Info:    Redeclaring math accent \dot on input line 40.
-LaTeX Font Info:    Redeclaring math accent \mathring on input line 40.
-LaTeX Font Info:    Redeclaring math symbol \Gamma on input line 40.
-LaTeX Font Info:    Redeclaring math symbol \Delta on input line 40.
-LaTeX Font Info:    Redeclaring math symbol \Theta on input line 40.
-LaTeX Font Info:    Redeclaring math symbol \Lambda on input line 40.
-LaTeX Font Info:    Redeclaring math symbol \Xi on input line 40.
-LaTeX Font Info:    Redeclaring math symbol \Pi on input line 40.
-LaTeX Font Info:    Redeclaring math symbol \Sigma on input line 40.
-LaTeX Font Info:    Redeclaring math symbol \Upsilon on input line 40.
-LaTeX Font Info:    Redeclaring math symbol \Phi on input line 40.
-LaTeX Font Info:    Redeclaring math symbol \Psi on input line 40.
-LaTeX Font Info:    Redeclaring math symbol \Omega on input line 40.
-LaTeX Font Info:    Redeclaring math symbol \mathdollar on input line 40.
-LaTeX Font Info:    Redeclaring symbol font `operators' on input line 40.
+(Font)                  OT1/cmr/m/n --> OT1/cmr/bx/n on input line 46.
+LaTeX Font Info:    Redeclaring math accent \acute on input line 46.
+LaTeX Font Info:    Redeclaring math accent \grave on input line 46.
+LaTeX Font Info:    Redeclaring math accent \ddot on input line 46.
+LaTeX Font Info:    Redeclaring math accent \tilde on input line 46.
+LaTeX Font Info:    Redeclaring math accent \bar on input line 46.
+LaTeX Font Info:    Redeclaring math accent \breve on input line 46.
+LaTeX Font Info:    Redeclaring math accent \check on input line 46.
+LaTeX Font Info:    Redeclaring math accent \hat on input line 46.
+LaTeX Font Info:    Redeclaring math accent \dot on input line 46.
+LaTeX Font Info:    Redeclaring math accent \mathring on input line 46.
+LaTeX Font Info:    Redeclaring math symbol \Gamma on input line 46.
+LaTeX Font Info:    Redeclaring math symbol \Delta on input line 46.
+LaTeX Font Info:    Redeclaring math symbol \Theta on input line 46.
+LaTeX Font Info:    Redeclaring math symbol \Lambda on input line 46.
+LaTeX Font Info:    Redeclaring math symbol \Xi on input line 46.
+LaTeX Font Info:    Redeclaring math symbol \Pi on input line 46.
+LaTeX Font Info:    Redeclaring math symbol \Sigma on input line 46.
+LaTeX Font Info:    Redeclaring math symbol \Upsilon on input line 46.
+LaTeX Font Info:    Redeclaring math symbol \Phi on input line 46.
+LaTeX Font Info:    Redeclaring math symbol \Psi on input line 46.
+LaTeX Font Info:    Redeclaring math symbol \Omega on input line 46.
+LaTeX Font Info:    Redeclaring math symbol \mathdollar on input line 46.
+LaTeX Font Info:    Redeclaring symbol font `operators' on input line 46.
 LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
-(Font)              `operators' in the math version `normal' on input line 40.
+(Font)              `operators' in the math version `normal' on input line 46.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
 (Font)                  OT1/cmr/m/n --> TU/TimesNewRoman(0)/m/n on input line 4
-0.
+6.
 LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
-(Font)              `operators' in the math version `bold' on input line 40.
+(Font)              `operators' in the math version `bold' on input line 46.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
 (Font)                  OT1/cmr/bx/n --> TU/TimesNewRoman(0)/m/n on input line 
-40.
+46.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
 (Font)                  TU/TimesNewRoman(0)/m/n --> TU/TimesNewRoman(0)/m/n on 
-input line 40.
+input line 46.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
 (Font)                  OT1/cmr/m/it --> TU/TimesNewRoman(0)/m/it on input line
- 40.
+ 46.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `normal'
 (Font)                  OT1/cmr/bx/n --> TU/TimesNewRoman(0)/b/n on input line 
-40.
+46.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `normal'
-(Font)                  OT1/cmss/m/n --> TU/lmss/m/n on input line 40.
+(Font)                  OT1/cmss/m/n --> TU/lmss/m/n on input line 46.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `normal'
-(Font)                  OT1/cmtt/m/n --> TU/lmtt/m/n on input line 40.
+(Font)                  OT1/cmtt/m/n --> TU/lmtt/m/n on input line 46.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
 (Font)                  TU/TimesNewRoman(0)/m/n --> TU/TimesNewRoman(0)/b/n on 
-input line 40.
+input line 46.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
 (Font)                  OT1/cmr/bx/it --> TU/TimesNewRoman(0)/b/it on input lin
-e 40.
+e 46.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
-(Font)                  OT1/cmss/bx/n --> TU/lmss/b/n on input line 40.
+(Font)                  OT1/cmss/bx/n --> TU/lmss/b/n on input line 46.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
-(Font)                  OT1/cmtt/m/n --> TU/lmtt/b/n on input line 40.
-LaTeX Info: Redefining \th on input line 40.
+(Font)                  OT1/cmtt/m/n --> TU/lmtt/b/n on input line 46.
+LaTeX Info: Redefining \th on input line 46.
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: float package is loaded.
 Package caption Info: hyperref package is loaded.
 Package caption Info: End \AtBeginDocument code.
-Package hyperref Info: Link coloring OFF on input line 40.
+Package hyperref Info: Link coloring OFF on input line 46.
 (./КР_№5.out) (./КР_№5.out)
 \@outlinefile=\write4
 \openout4 = `КР_№5.out'.
@@ -863,13 +863,13 @@ Package hyperref Info: Link coloring OFF on input line 40.
  [1
 
 ]
-Overfull \hbox (3.26942pt too wide) in paragraph at lines 97--98
+Overfull \hbox (3.26942pt too wide) in paragraph at lines 103--104
 []\TU/TimesNewRoman(0)/m/n/14.4 «Аннотация», «Содержание», «Введение», «Анализ 
 предметной области»,
  []
 
 
-Overfull \hbox (3.44563pt too wide) in paragraph at lines 97--98
+Overfull \hbox (3.44563pt too wide) in paragraph at lines 103--104
 \TU/TimesNewRoman(0)/m/n/14.4 «Разработка объектной модели этапа проектирования
 », «Разработка модели хра-
  []
@@ -877,13 +877,13 @@ Overfull \hbox (3.44563pt too wide) in paragraph at lines 97--98
 [1
 
 ]
-Overfull \hbox (0.16673pt too wide) in paragraph at lines 130--132
+Overfull \hbox (0.16673pt too wide) in paragraph at lines 136--138
 \TU/TimesNewRoman(0)/m/n/14.4 parameters, enumerations and measurement units in
  PostgreSQL, and provides access
  []
 
 
-Overfull \hbox (13.34448pt too wide) in paragraph at lines 130--132
+Overfull \hbox (13.34448pt too wide) in paragraph at lines 136--138
 \TU/TimesNewRoman(0)/m/n/14.4 to the data through a FastAPI-based API. The user
  interface includes a product showcase
  []
@@ -899,19 +899,19 @@ Overfull \hbox (13.34448pt too wide) in paragraph at lines 130--132
 ] [5
 
 ]
-Overfull \hbox (8.09053pt too wide) in paragraph at lines 202--203
+Overfull \hbox (8.09053pt too wide) in paragraph at lines 208--209
 []\TU/TimesNewRoman(0)/m/n/14.4 Для справочника электронных комплектующих выдел
 ены два актора: поль-
  []
 
 [6]
-Overfull \hbox (0.74179pt too wide) in paragraph at lines 204--205
+Overfull \hbox (0.74179pt too wide) in paragraph at lines 210--211
 []\TU/TimesNewRoman(0)/m/n/14.4 Пользователь витрины работает с публичной часть
 ю приложения. Он про-
  []
 
 
-Overfull \hbox (2.4029pt too wide) in paragraph at lines 206--207
+Overfull \hbox (2.4029pt too wide) in paragraph at lines 212--213
 \TU/TimesNewRoman(0)/m/n/14.4 ных. Он управляет категориями, товарами, параметр
 ами, перечислениями и еди-
  []
@@ -919,85 +919,85 @@ Overfull \hbox (2.4029pt too wide) in paragraph at lines 206--207
 File: img/USE-CASE-5.pdf Graphic file (type pdf)
 <use img/USE-CASE-5.pdf>
 [7]
-Overfull \hbox (3.45566pt too wide) in paragraph at lines 239--240
+Overfull \hbox (3.45566pt too wide) in paragraph at lines 245--246
 []\TU/TimesNewRoman(0)/m/n/14.4 Приложение представляет собой модульное монолит
 ное web-приложение.
  []
 
 
-Overfull \hbox (4.9141pt too wide) in paragraph at lines 239--240
+Overfull \hbox (4.9141pt too wide) in paragraph at lines 245--246
 \TU/TimesNewRoman(0)/m/n/14.4 файлов находятся в одном Python-приложении. Отдел
 ьного frontend-сервера нет:
  []
 
 
-Overfull \hbox (39.2722pt too wide) in paragraph at lines 239--240
+Overfull \hbox (39.2722pt too wide) in paragraph at lines 245--246
 \TU/TimesNewRoman(0)/m/n/14.4 страница интерфейса, стили и JavaScript-файл отда
 ются тем же FastAPI-приложением,
  []
 
 [8]
-Overfull \hbox (12.73567pt too wide) in paragraph at lines 246--247
+Overfull \hbox (12.73567pt too wide) in paragraph at lines 252--253
 []\TU/TimesNewRoman(0)/m/n/14.4 Модели запросов и ответов. В файле \TU/lmtt/m/n
 /14.4 src/api/models.py \TU/TimesNewRoman(0)/m/n/14.4 описаны Pydantic-
  []
 
 
-Overfull \hbox (46.0513pt too wide) in paragraph at lines 247--248
+Overfull \hbox (46.0513pt too wide) in paragraph at lines 253--254
 []\TU/TimesNewRoman(0)/m/n/14.4 Слой работы с базой данных. Основная логика нах
 одится в \TU/lmtt/m/n/14.4 src/db/database.py\TU/TimesNewRoman(0)/m/n/14.4 .
  []
 
 [9]
-Overfull \hbox (11.95442pt too wide) in paragraph at lines 249--250
+Overfull \hbox (11.95442pt too wide) in paragraph at lines 255--256
 \TU/lmtt/m/n/14.4 src/static/index.html\TU/TimesNewRoman(0)/m/n/14.4 , \TU/lmtt
 /m/n/14.4 src/static/styles.css \TU/TimesNewRoman(0)/m/n/14.4 и \TU/lmtt/m/n/14
 .4 src/static/app.js\TU/TimesNewRoman(0)/m/n/14.4 .
  []
 
 
-Overfull \hbox (98.1355pt too wide) in paragraph at lines 250--251
+Overfull \hbox (98.1355pt too wide) in paragraph at lines 256--257
 []\TU/TimesNewRoman(0)/m/n/14.4 Контейнеризация. Для запуска проекта использует
 ся \TU/lmtt/m/n/14.4 Dockerfile \TU/TimesNewRoman(0)/m/n/14.4 и \TU/lmtt/m/n/14
 .4 docker-compose.yml\TU/TimesNewRoman(0)/m/n/14.4 .
  []
 
 [10]
-Overfull \hbox (3.17267pt too wide) in paragraph at lines 441--442
+Overfull \hbox (3.17267pt too wide) in paragraph at lines 447--448
 \TU/TimesNewRoman(0)/m/n/14.4 сов пунктирными зависимостями: они не хранят данн
 ые самостоятельно, а отоб-
  []
 
 
-Underfull \hbox (badness 3302) in paragraph at lines 581--581
+Underfull \hbox (badness 3302) in paragraph at lines 587--587
 []\TU/lmtt/m/n/8 enum_value_id \TU/TimesNewRoman(0)/m/n/8 FK 
  []
 
 
-Underfull \hbox (badness 3302) in paragraph at lines 581--581
+Underfull \hbox (badness 3302) in paragraph at lines 587--587
 []\TU/lmtt/m/n/8 enum_value_id \TU/TimesNewRoman(0)/m/n/8 FK 
  []
 
 
-Underfull \hbox (badness 3302) in paragraph at lines 581--581
+Underfull \hbox (badness 3302) in paragraph at lines 587--587
 []\TU/lmtt/m/n/8 child_enum_id \TU/TimesNewRoman(0)/m/n/8 FK 
  []
 
 [11]
-Overfull \hbox (51.25366pt too wide) in paragraph at lines 585--586
+Overfull \hbox (51.25366pt too wide) in paragraph at lines 591--592
 \TU/TimesNewRoman(0)/m/n/14.4 ния перечислений, так и ссылки на вложенные переч
 исления через поле \TU/lmtt/m/n/14.4 child_enum_id\TU/TimesNewRoman(0)/m/n/14.4
  ,
  []
 
 [12]
-Overfull \hbox (37.25314pt too wide) in paragraph at lines 603--604
+Overfull \hbox (37.25314pt too wide) in paragraph at lines 609--610
 \TU/TimesNewRoman(0)/m/n/14.4 и поддерживает асинхронную работу. Для хранения д
 анных используется PostgreSQL.
  []
 
 
-Overfull \hbox (28.72595pt too wide) in paragraph at lines 605--606
+Overfull \hbox (28.72595pt too wide) in paragraph at lines 611--612
 []\TU/TimesNewRoman(0)/m/n/14.4 Пользовательский интерфейс реализован без отдел
 ьного frontend-фреймворка:
  []
@@ -1040,43 +1040,105 @@ File: img/test-cart.png Graphic file (type bmp)
 File: img/test-cart-order.png Graphic file (type bmp)
 <img/test-cart-order.png>
 
-Overfull \hbox (5.2516pt too wide) in paragraph at lines 794--795
+Overfull \hbox (4.81755pt too wide) in paragraph at lines 802--803
 []\TU/TimesNewRoman(0)/m/n/14.4 Все описанные сценарии завершились успешно. Пуб
 личные операции чте-
  []
 
-[22] [23] [24] [25] [26
-
-]
-Underfull \hbox (badness 10000) in paragraph at lines 861--862
-[]\TU/TimesNewRoman(0)/m/n/14.4 FastAPI Documentation [Электронный ресурс]. URL
-: []$[][][][][] []
+[22]
+Overfull \hbox (22.9866pt too wide) in paragraph at lines 820--821
+[]\TU/TimesNewRoman(0)/m/n/14.4 Swagger API – отдельная служебная страница для 
+проверки REST endpoint’ов. 
  []
 
-[27
-
-] [28
-
-]
-Overfull \hbox (27.09634pt too wide) in paragraph at lines 876--877
-[]\TU/TimesNewRoman(0)/m/n/14.4 В приложение при необходимости можно добавить ф
-рагменты SQL-процедур,
+[23] [24]
+Underfull \hbox (badness 5446) in paragraph at lines 960--960
+ [][]\TU/TimesNewRoman(0)/b/n/8 Корзина
  []
 
 
-! LaTeX Error: \begin{enumerate} on input line 623 ended by \end{document}.
+Underfull \hbox (badness 1466) in paragraph at lines 960--960
+ [][]\TU/TimesNewRoman(0)/b/n/8 Перечисления
+ []
 
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.878 \end{document}
-                    
-Your command was ignored.
-Type  I <command> <return>  to replace it with another command,
-or  <return>  to continue without it.
 
-[29
+Overfull \hbox (1.94652pt too wide) in paragraph at lines 976--977
+[]\TU/TimesNewRoman(0)/m/n/14.4 Палитра была подобрана с помощью сервиса \TU/lm
+tt/m/n/14.4 https://coolors.co/\TU/TimesNewRoman(0)/m/n/14.4 . Этот
+ []
+
+[25]
+File: img/ui-main.png Graphic file (type bmp)
+<img/ui-main.png>
+ [26]
+File: img/ui-catalog.png Graphic file (type bmp)
+<img/ui-catalog.png>
+File: img/ui-products.png Graphic file (type bmp)
+<img/ui-products.png>
+ [27]
+File: img/ui-filters.png Graphic file (type bmp)
+<img/ui-filters.png>
+File: img/ui-cart.png Graphic file (type bmp)
+<img/ui-cart.png>
+ [28]
+File: img/ui-admin-login.png Graphic file (type bmp)
+<img/ui-admin-login.png>
+File: img/ui-mobile.png Graphic file (type bmp)
+<img/ui-mobile.png>
+ [29]
+File: img/ui-mobile-2.png Graphic file (type bmp)
+<img/ui-mobile-2.png>
+ [30]
+File: img/ui-mobile-3.png Graphic file (type bmp)
+<img/ui-mobile-3.png>
+ [31]
+File: img/ui-mobile-4.png Graphic file (type bmp)
+<img/ui-mobile-4.png>
+ [32] [33]
+Overfull \hbox (24.65373pt too wide) in paragraph at lines 1078--1079
+[]\TU/TimesNewRoman(0)/m/n/14.4 В ходе курсовой работы было спроектировано и ре
+ализовано web-приложение
+ []
+
+[34
+
+]
+Underfull \hbox (badness 10000) in paragraph at lines 1087--1088
+[]\TU/TimesNewRoman(0)/m/n/14.4 Каталог интернет-магазина техники // Ситилинк [
+Электрон-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1087--1088
+\TU/TimesNewRoman(0)/m/n/14.4 ный ресурс]. URL: []$[][][][][] [] [] [] [][][] [
+] [][][][][][][][] [] [][] [] [][][][][][][] []
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1087--1088
+[][][][][][][][][][][][][][][][][][][][][][][][][][] [] [][][][] [] [][][][][][
+][][]$[] \TU/TimesNewRoman(0)/m/n/14.4 (дата обращения:
+ []
+
+
+Underfull \hbox (badness 6047) in paragraph at lines 1088--1089
+[]\TU/TimesNewRoman(0)/m/n/14.4 Каталог интернет-магазина техники // DNS [Элект
+ронный ресурс].
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1088--1089
+\TU/TimesNewRoman(0)/m/n/14.4 URL: []$[][][][][] [] [] [] [][][] [] [][][][][][
+][][][] [] [][] [] [][][][][][][] [] [][][][][][][][][][][][][][][][] []
+ []
+
+
+Underfull \hbox (badness 4505) in paragraph at lines 1094--1095
+[]\TU/TimesNewRoman(0)/m/n/14.4 ГОСТ Р ИСО 9241-161-2016. Эргономика взаимодейс
+твия человек-
+ []
+
+[35
 
 ] (./КР_№5.aux)
  ***********
@@ -1084,19 +1146,15 @@ LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
 Package rerunfilecheck Info: File `КР_№5.out' has not changed.
-(rerunfilecheck)             Checksum: 84280DA059F208EEC372D2E3FFF74238;5180.
- )
-(\end occurred inside a group at level 1)
-
-### semi simple group (level 1) entered at line 623 (\begingroup)
-### bottom level 
+(rerunfilecheck)             Checksum: B24F0B85570603B80723C59CBF7989C7;4496.
+ ) 
 Here is how much of TeX's memory you used:
- 26176 strings out of 469438
- 533965 string characters out of 5471046
- 1025836 words of memory out of 5000000
- 54373 multiletter control sequences out of 15000+600000
+ 26544 strings out of 469438
+ 540973 string characters out of 5471046
+ 1025260 words of memory out of 5000000
+ 54731 multiletter control sequences out of 15000+600000
  629621 words of font info for 68 fonts, out of 8000000 for 9000
  682 hyphenation exceptions out of 8191
  84i,9n,104p,638b,928s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on КР_№5.xdv (30 pages, 338648 bytes).
+Output written on КР_№5.xdv (36 pages, 443832 bytes).

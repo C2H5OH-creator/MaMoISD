@@ -1,11 +1,11 @@
 # Fdb version 4
-["xdvipdfmx"] 1779231459.6628 "КР_№5.xdv" "КР_№5.pdf" "КР_№5" 1779231461.68397 0
-  "КР_№5.xdv" 1779231426.7657 338648 fce4b21ce12d55ec0a47fa406c990c53 "xelatex"
+["xdvipdfmx"] 1779233531.52562 "КР_№5.xdv" "КР_№5.pdf" "КР_№5" 1779233534.75268 0
+  "КР_№5.xdv" 1779233531.41456 443832 ff2ddef2ce20d16ee14878141b1a6cdd "xelatex"
   (generated)
   "КР_№5.pdf"
   (rewritten before read)
-["xelatex"] 1779231425.57212 "/home/c2h5oh/dev/projects/mispris/docs/курсовая/report/КР_№5.tex" "КР_№5.xdv" "КР_№5" 1779231461.68125 2
-  "/home/c2h5oh/dev/projects/mispris/docs/курсовая/report/КР_№5.tex" 1779231459.53405 57068 d1a10516af4a8d2ecf9fef8803742ece ""
+["xelatex"] 1779233529.96464 "/home/c2h5oh/dev/projects/mispris/docs/курсовая/report/КР_№5.tex" "КР_№5.xdv" "КР_№5" 1779233534.74993 0
+  "/home/c2h5oh/dev/projects/mispris/docs/курсовая/report/КР_№5.tex" 1779233529.83854 75528 70627255bb1b00fe30969eb4fa145250 ""
   "/usr/share/texmf-dist/fonts/map/fontname/texfonts.map" 1775415801 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texmf-dist/fonts/tfm/adobe/zapfding/pzdr.tfm" 1775415801 1528 f853c4d1b4e0550255e02831fdc8496f ""
   "/usr/share/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1775415801 1004 54797486969f23fa377b128694d548df ""
@@ -157,10 +157,20 @@
   "img/test-filters-validation.png" 1779231171.36101 326970 396d60590abf3b9232f97495fd438afc ""
   "img/test-product-create.png" 1779230741.32856 24407 95c6d3756182181a0cb552128f35ca33 ""
   "img/test-product-result.png" 1779230786.98602 209687 1d0ebd84d1def5faabfcae82236265e8 ""
-  "КР_№5.aux" 1779231426.7647 6780 73ac90b90793e8880e66a04378a8e189 "xelatex"
-  "КР_№5.out" 1779231426.7657 5180 84280da059f208eec372d2e3fff74238 "xelatex"
-  "КР_№5.tex" 1779231459.53405 57068 d1a10516af4a8d2ecf9fef8803742ece ""
-  "КР_№5.toc" 1779231426.7657 2451 b5c61ad132f2321df0cb55992d3c467d "xelatex"
+  "img/ui-admin-login.png" 1779233109.19491 149722 d1e21d3979d660c7cc195e89b0dc6ba0 ""
+  "img/ui-cart.png" 1779233093.70074 172514 1a6a2276c440969cbf8ba03753c50561 ""
+  "img/ui-catalog.png" 1779233017.54589 103539 906fbeedefd85a9dea75ddd29640c75d ""
+  "img/ui-filters.png" 1779233070.57948 51488 779c300a7fde24542b91708b0a3320d4 ""
+  "img/ui-main.png" 1779232999.92669 251434 da10404da382ed07725aa38aee96107f ""
+  "img/ui-mobile-2.png" 1779233187.99478 44586 1d7ccf6293b0ebccffca13e071cb1798 ""
+  "img/ui-mobile-3.png" 1779233198.4519 64913 928751146db458bcbf87605c5ab3400a ""
+  "img/ui-mobile-4.png" 1779233206.00498 46502 78f0f93e128cd8aae1cadc2d67bb11db ""
+  "img/ui-mobile.png" 1779233177.12166 63925 9580f309542af2eeb42a9909d85a8b89 ""
+  "img/ui-products.png" 1779233054.2053 166560 e0067a02858d18765989fbffaf1fe831 ""
+  "КР_№5.aux" 1779233531.41256 8640 fa7fb529c5c322c8ff890cd96629418b "xelatex"
+  "КР_№5.out" 1779233531.41356 4496 b24f0b85570603b80723c59cbf7989c7 "xelatex"
+  "КР_№5.tex" 1779233529.83854 75528 70627255bb1b00fe30969eb4fa145250 ""
+  "КР_№5.toc" 1779233531.41456 2194 776a25802c27a22af71c550a77a8b3e8 "xelatex"
   (generated)
   "КР_№5.aux"
   "КР_№5.log"

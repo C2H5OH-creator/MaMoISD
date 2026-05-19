@@ -1623,6 +1623,26 @@ async def assign_parameter_to_category(
             )
             .returning(category_parameters_table)
         )
+        descendants = await _list_category_descendant_ids(session, category_id)
+        for descendant_id in descendants:
+            if await _category_parameter_exists(
+                session,
+                category_id=descendant_id,
+                parameter_id=parameter_id,
+            ):
+                continue
+            await session.execute(
+                insert(category_parameters_table).values(
+                    category_id=descendant_id,
+                    parameter_id=parameter_id,
+                    priority=priority,
+                    is_required=1 if is_required else 0,
+                    is_inherited=1,
+                    source_category_id=category_id,
+                    min_value=min_value,
+                    max_value=max_value,
+                )
+            )
         await session.commit()
         return _row_to_category_parameter_dict(result.mappings().one())
 
@@ -1748,6 +1768,23 @@ async def copy_category_parameters(category_id: int) -> list[dict[str, object]]:
         await session.commit()
 
     return await list_category_parameters(category_id)
+
+
+async def _list_category_descendant_ids(
+    session: AsyncSession,
+    category_id: int,
+) -> list[int]:
+    descendants: list[int] = []
+    pending = [category_id]
+    while pending:
+        current_id = pending.pop(0)
+        result = await session.execute(
+            select(categories_table.c.id).where(categories_table.c.parent_id == current_id)
+        )
+        child_ids = [int(row[0]) for row in result.all()]
+        descendants.extend(child_ids)
+        pending.extend(child_ids)
+    return descendants
 
 
 def _count_parameter_value_fields(
@@ -2423,8 +2460,28 @@ async def create_category(name: str, parent_id: int | None = None) -> dict[str, 
             .values(name=name.strip(), parent_id=resolved_parent_id)
             .returning(categories_table)
         )
-        await session.commit()
         row = result.mappings().one()
+        category_id = int(row["id"])
+
+        parent_parameters = await session.execute(
+            select(category_parameters_table).where(
+                category_parameters_table.c.category_id == resolved_parent_id
+            )
+        )
+        for parent_parameter in parent_parameters.mappings().all():
+            await session.execute(
+                insert(category_parameters_table).values(
+                    category_id=category_id,
+                    parameter_id=int(parent_parameter["parameter_id"]),
+                    priority=int(parent_parameter["priority"]),
+                    is_required=int(parent_parameter["is_required"]),
+                    is_inherited=1,
+                    source_category_id=resolved_parent_id,
+                    min_value=parent_parameter["min_value"],
+                    max_value=parent_parameter["max_value"],
+                )
+            )
+        await session.commit()
         return _row_to_category_dict(row)
 
 

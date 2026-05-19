@@ -36,7 +36,7 @@ a {
 }
 
 .shell {
-  width: min(1180px, calc(100% - 32px));
+  width: min(1770px, calc(100% - 32px));
   margin: 0 auto;
   padding: 24px 0 48px;
 }
@@ -647,7 +647,7 @@ textarea:focus {
 
 .admin-panel {
   display: grid;
-  grid-template-columns: minmax(240px, 0.55fr) minmax(0, 1.45fr);
+  grid-template-columns: minmax(260px, 0.4fr) minmax(0, 1.6fr);
   gap: 24px;
   color: #ffffff;
   background: var(--bg-strong);
@@ -669,9 +669,50 @@ textarea:focus {
   color: #ffffff;
 }
 
+.auth-card {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.auth-card p {
+  margin: 0;
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.login-form {
+  display: grid;
+  gap: 10px;
+}
+
+.login-form label {
+  display: grid;
+  gap: 7px;
+}
+
+.login-form label span {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.login-form .button,
+.auth-card > .button {
+  justify-content: center;
+  border: 0;
+  cursor: pointer;
+}
+
 .admin-forms {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -679,10 +720,15 @@ textarea:focus {
   display: grid;
   align-content: start;
   gap: 13px;
+  min-width: 0;
   padding: 18px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 26px;
   background: rgba(255, 255, 255, 0.07);
+}
+
+.product-admin-form {
+  grid-column: span 2;
 }
 
 .admin-form h3 {
@@ -705,7 +751,7 @@ textarea:focus {
 
 .form-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -713,6 +759,72 @@ textarea:focus {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.inline-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.inline-head h4 {
+  margin: 0;
+}
+
+.spec-editor,
+.compact-list {
+  display: grid;
+  gap: 10px;
+}
+
+.spec-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.9fr) minmax(120px, 0.7fr) minmax(130px, 1fr) minmax(90px, auto);
+  gap: 8px;
+  align-items: center;
+}
+
+.spec-row input,
+.spec-row select {
+  min-width: 0;
+}
+
+.spec-row .button {
+  min-height: 48px;
+  padding: 0 12px;
+}
+
+.compact-list {
+  margin-top: 4px;
+}
+
+.compact-list p {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 16px;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.compact-list span {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.85rem;
+}
+
+.admin-checkbox {
+  display: flex !important;
+  align-items: center;
+  gap: 10px !important;
+  min-height: 48px;
+  padding-top: 20px;
+}
+
+.admin-checkbox input {
+  width: auto;
+  min-height: auto;
 }
 
 .admin-form .button {
@@ -814,8 +926,14 @@ textarea:focus {
 
   .filter-grid,
   .admin-forms,
-  .form-row {
+  .product-admin-form,
+  .form-row,
+  .spec-row {
     grid-template-columns: 1fr;
+  }
+
+  .product-admin-form {
+    grid-column: auto;
   }
 
   .cart-item,

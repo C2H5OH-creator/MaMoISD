@@ -1,7 +1,8 @@
 from decimal import Decimal
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
+from src.api.auth import require_admin
 from src.api.models import (
     CategoryCreateRequest,
     CategoryMoveRequest,
@@ -154,6 +155,7 @@ async def get_database_info() -> DatabaseInfoResponse:
 @service_router.post(
     "/tables/create",
     response_model=MessageResponse,
+    dependencies=[Depends(require_admin)],
     summary="Создать таблицы БД",
     description="Создает фиксированную схему: categories, products, specifications, measurement_units, enumerations.",
 )
@@ -198,6 +200,7 @@ async def list_measurement_units_endpoint() -> list[MeasurementUnitResponse]:
     "/measurement-units",
     response_model=MeasurementUnitResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_admin)],
     summary="Создать единицу измерения",
 )
 async def create_measurement_unit_endpoint(
@@ -230,6 +233,7 @@ async def get_measurement_unit_endpoint(unit_id: int) -> MeasurementUnitResponse
 @measurement_units_router.patch(
     "/measurement-units/{unit_id}",
     response_model=MeasurementUnitResponse,
+    dependencies=[Depends(require_admin)],
     summary="Изменить единицу измерения",
 )
 async def update_measurement_unit_endpoint(
@@ -251,6 +255,7 @@ async def update_measurement_unit_endpoint(
 @measurement_units_router.delete(
     "/measurement-units/{unit_id}",
     response_model=MessageResponse,
+    dependencies=[Depends(require_admin)],
     summary="Удалить единицу измерения",
 )
 async def delete_measurement_unit_endpoint(unit_id: int) -> MessageResponse:
@@ -275,6 +280,7 @@ async def list_parameters_endpoint() -> list[ParameterResponse]:
     "/parameters",
     response_model=ParameterResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_admin)],
     summary="Создать параметр",
 )
 async def create_parameter_endpoint(payload: ParameterCreateRequest) -> ParameterResponse:
@@ -308,6 +314,7 @@ async def get_parameter_endpoint(parameter_id: int) -> ParameterResponse:
 @parameters_router.patch(
     "/parameters/{parameter_id}",
     response_model=ParameterResponse,
+    dependencies=[Depends(require_admin)],
     summary="Изменить параметр",
 )
 async def update_parameter_endpoint(
@@ -332,6 +339,7 @@ async def update_parameter_endpoint(
 @parameters_router.delete(
     "/parameters/{parameter_id}",
     response_model=MessageResponse,
+    dependencies=[Depends(require_admin)],
     summary="Удалить параметр",
 )
 async def delete_parameter_endpoint(parameter_id: int) -> MessageResponse:
@@ -361,6 +369,7 @@ async def list_category_parameters_endpoint(
     "/categories/{category_id}/parameters",
     response_model=CategoryParameterResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_admin)],
     summary="Назначить параметр категории",
 )
 async def assign_parameter_to_category_endpoint(
@@ -384,6 +393,7 @@ async def assign_parameter_to_category_endpoint(
 @category_parameters_router.patch(
     "/category-parameters/{category_parameter_id}",
     response_model=CategoryParameterResponse,
+    dependencies=[Depends(require_admin)],
     summary="Изменить назначение параметра категории",
 )
 async def update_category_parameter_endpoint(
@@ -406,6 +416,7 @@ async def update_category_parameter_endpoint(
 @category_parameters_router.delete(
     "/category-parameters/{category_parameter_id}",
     response_model=MessageResponse,
+    dependencies=[Depends(require_admin)],
     summary="Удалить параметр из категории",
 )
 async def remove_parameter_from_category_endpoint(
@@ -421,6 +432,7 @@ async def remove_parameter_from_category_endpoint(
 @category_parameters_router.post(
     "/categories/{category_id}/parameters/copy-from-parent",
     response_model=list[CategoryParameterResponse],
+    dependencies=[Depends(require_admin)],
     summary="Скопировать параметры родительской категории",
 )
 async def copy_category_parameters_endpoint(
@@ -451,6 +463,7 @@ async def list_product_parameter_values_endpoint(
 @product_parameters_router.put(
     "/products/{product_id}/parameters/{parameter_id}",
     response_model=ProductParameterValueResponse,
+    dependencies=[Depends(require_admin)],
     summary="Записать значение параметра изделия",
 )
 async def set_product_parameter_value_endpoint(
@@ -476,6 +489,7 @@ async def set_product_parameter_value_endpoint(
 @product_parameters_router.delete(
     "/products/{product_id}/parameters/{parameter_id}",
     response_model=MessageResponse,
+    dependencies=[Depends(require_admin)],
     summary="Удалить значение параметра изделия",
 )
 async def delete_product_parameter_value_endpoint(
@@ -540,6 +554,7 @@ async def filter_products_by_parameters_endpoint(
     "/categories",
     response_model=CategoryResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_admin)],
     summary="Создать категорию",
 )
 async def create_category_endpoint(payload: CategoryCreateRequest) -> CategoryResponse:
@@ -576,6 +591,7 @@ async def get_category_endpoint(category_id: int) -> CategoryResponse:
 @categories_router.patch(
     "/categories/{category_id}",
     response_model=CategoryResponse,
+    dependencies=[Depends(require_admin)],
     summary="Переименовать категорию",
 )
 async def update_category_endpoint(
@@ -592,6 +608,7 @@ async def update_category_endpoint(
 @categories_router.patch(
     "/categories/{category_id}/move",
     response_model=CategoryResponse,
+    dependencies=[Depends(require_admin)],
     summary="Переместить категорию",
 )
 async def move_category_endpoint(
@@ -608,6 +625,7 @@ async def move_category_endpoint(
 @categories_router.delete(
     "/categories/{category_id}",
     response_model=MessageResponse,
+    dependencies=[Depends(require_admin)],
     summary="Удалить категорию",
 )
 async def delete_category_endpoint(category_id: int) -> MessageResponse:
@@ -622,6 +640,7 @@ async def delete_category_endpoint(category_id: int) -> MessageResponse:
     "/products",
     response_model=ProductResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_admin)],
     summary="Создать комплектующее",
 )
 async def create_product_endpoint(payload: ProductCreateRequest) -> ProductResponse:
@@ -665,6 +684,7 @@ async def get_product_endpoint(product_id: int) -> ProductResponse:
 @products_router.patch(
     "/products/{product_id}",
     response_model=ProductResponse,
+    dependencies=[Depends(require_admin)],
     summary="Изменить комплектующее",
 )
 async def update_product_endpoint(
@@ -688,6 +708,7 @@ async def update_product_endpoint(
 @products_router.patch(
     "/products/{product_id}/move",
     response_model=ProductResponse,
+    dependencies=[Depends(require_admin)],
     summary="Переместить комплектующее в другую категорию",
 )
 async def move_product_endpoint(
@@ -704,6 +725,7 @@ async def move_product_endpoint(
 @products_router.delete(
     "/products/{product_id}",
     response_model=MessageResponse,
+    dependencies=[Depends(require_admin)],
     summary="Удалить комплектующее",
 )
 async def delete_product_endpoint(product_id: int) -> MessageResponse:
@@ -728,6 +750,7 @@ async def list_enumerations_endpoint() -> list[EnumerationResponse]:
     "/enumerations",
     response_model=EnumerationResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_admin)],
     summary="Создать перечисление",
 )
 async def create_enumeration_endpoint(
@@ -763,6 +786,7 @@ async def get_enumeration_endpoint(enumeration_id: int) -> EnumerationDetailResp
 @enumerations_router.patch(
     "/enumerations/{enumeration_id}",
     response_model=EnumerationResponse,
+    dependencies=[Depends(require_admin)],
     summary="Изменить перечисление",
 )
 async def update_enumeration_endpoint(
@@ -783,6 +807,7 @@ async def update_enumeration_endpoint(
 @enumerations_router.delete(
     "/enumerations/{enumeration_id}",
     response_model=MessageResponse,
+    dependencies=[Depends(require_admin)],
     summary="Удалить перечисление",
 )
 async def delete_enumeration_endpoint(enumeration_id: int) -> MessageResponse:
@@ -812,6 +837,7 @@ async def list_enumeration_values_endpoint(
     "/enumerations/{enumeration_id}/values",
     response_model=EnumerationValueResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_admin)],
     summary="Добавить значение в перечисление",
 )
 async def create_enumeration_value_endpoint(
@@ -835,6 +861,7 @@ async def create_enumeration_value_endpoint(
 @enumerations_router.patch(
     "/enumeration-values/{value_id}",
     response_model=EnumerationValueResponse,
+    dependencies=[Depends(require_admin)],
     summary="Изменить значение перечисления",
 )
 async def update_enumeration_value_endpoint(
@@ -858,6 +885,7 @@ async def update_enumeration_value_endpoint(
 @enumerations_router.delete(
     "/enumeration-values/{value_id}",
     response_model=MessageResponse,
+    dependencies=[Depends(require_admin)],
     summary="Удалить значение перечисления",
 )
 async def delete_enumeration_value_endpoint(value_id: int) -> MessageResponse:

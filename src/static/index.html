@@ -159,13 +159,28 @@
             <p class="eyebrow">Управление</p>
             <h2>Быстрое добавление</h2>
             <p>
-              Эти формы используют существующие POST endpoint'ы backend. Более
-              сложные операции редактирования пока доступны через Swagger.
+              Для просмотра каталога вход не нужен. Для создания, изменения и
+              удаления данных необходимо войти как администратор.
             </p>
+            <div class="auth-card">
+              <p id="authStatus">Вы работаете в режиме просмотра.</p>
+              <form id="loginForm" class="login-form">
+                <label>
+                  <span>Логин</span>
+                  <input name="username" type="text" autocomplete="username" required placeholder="admin" />
+                </label>
+                <label>
+                  <span>Пароль</span>
+                  <input name="password" type="password" autocomplete="current-password" required placeholder="••••••" />
+                </label>
+                <button class="button primary" type="submit">Войти</button>
+              </form>
+              <button id="logoutButton" class="button secondary" type="button" hidden>Выйти</button>
+            </div>
             <p id="adminMessage" class="admin-message" role="status"></p>
           </div>
 
-          <div class="admin-forms">
+          <div id="adminForms" class="admin-forms" hidden>
             <form id="categoryForm" class="admin-form">
               <h3 id="categoryFormTitle">Новая категория</h3>
               <label>
@@ -184,7 +199,7 @@
               </div>
             </form>
 
-            <form id="productForm" class="admin-form">
+            <form id="productForm" class="admin-form product-admin-form">
               <h3 id="productFormTitle">Новый товар</h3>
               <label>
                 <span>Название</span>
@@ -210,10 +225,127 @@
                 <span>Описание</span>
                 <textarea name="description" maxlength="1000" rows="3" placeholder="8 ядер, 16 потоков"></textarea>
               </label>
+              <div class="spec-editor">
+                <div class="inline-head">
+                  <h4>Характеристики</h4>
+                  <button id="addSpecButton" class="button ghost" type="button">Добавить</button>
+                </div>
+                <div id="specRows" class="spec-rows"></div>
+              </div>
               <div class="form-actions">
                 <button id="productSubmitButton" class="button primary" type="submit">Создать товар</button>
                 <button id="productCancelButton" class="button ghost" type="button" hidden>Отмена</button>
               </div>
+            </form>
+
+            <form id="enumerationForm" class="admin-form">
+              <h3>Новое перечисление</h3>
+              <label>
+                <span>Название</span>
+                <input name="name" type="text" minlength="1" maxlength="255" required placeholder="Сокеты процессоров" />
+              </label>
+              <label>
+                <span>Описание</span>
+                <textarea name="description" maxlength="1000" rows="3" placeholder="Допустимые значения для характеристики"></textarea>
+              </label>
+              <button class="button primary" type="submit">Создать перечисление</button>
+            </form>
+
+            <form id="enumValueForm" class="admin-form">
+              <h3>Значение перечисления</h3>
+              <label>
+                <span>Перечисление</span>
+                <select id="enumValueEnumSelect" name="enum_id" required>
+                  <option value="">Выберите перечисление</option>
+                </select>
+              </label>
+              <label>
+                <span>Тип элемента</span>
+                <select id="enumItemTypeSelect" name="item_type">
+                  <option value="value">Обычное значение</option>
+                  <option value="enum">Вложенное перечисление</option>
+                </select>
+              </label>
+              <label id="enumValueTextWrap">
+                <span>Значение</span>
+                <input name="value" type="text" maxlength="255" placeholder="AM5" />
+              </label>
+              <label id="enumChildWrap" hidden>
+                <span>Вложенное перечисление</span>
+                <select id="enumChildSelect" name="child_enum_id">
+                  <option value="">Выберите перечисление</option>
+                </select>
+              </label>
+              <div class="form-row">
+                <label>
+                  <span>Приоритет</span>
+                  <input name="priority" type="number" min="0" step="1" value="0" />
+                </label>
+                <label>
+                  <span>Описание</span>
+                  <input name="description" type="text" maxlength="1000" placeholder="Опционально" />
+                </label>
+              </div>
+              <button class="button primary" type="submit">Добавить значение</button>
+              <div id="enumValuesList" class="compact-list"></div>
+            </form>
+
+            <form id="parameterForm" class="admin-form">
+              <h3>Параметр категории</h3>
+              <label>
+                <span>Категория</span>
+                <select id="parameterCategorySelect" name="category_id" required>
+                  <option value="">Выберите категорию</option>
+                </select>
+              </label>
+              <div class="form-row">
+                <label>
+                  <span>Код</span>
+                  <input name="code" type="text" minlength="1" maxlength="255" required placeholder="socket" />
+                </label>
+                <label>
+                  <span>Название</span>
+                  <input name="name" type="text" minlength="1" maxlength="255" required placeholder="Сокет" />
+                </label>
+              </div>
+              <label>
+                <span>Тип</span>
+                <select id="parameterTypeSelect" name="parameter_type">
+                  <option value="string">Строка</option>
+                  <option value="integer">Целое число</option>
+                  <option value="real">Вещественное число</option>
+                  <option value="datetime">Дата и время</option>
+                  <option value="enum">Перечисление</option>
+                </select>
+              </label>
+              <label id="parameterEnumWrap" hidden>
+                <span>Перечисление для параметра</span>
+                <select id="parameterEnumSelect" name="enum_id">
+                  <option value="">Выберите перечисление</option>
+                </select>
+              </label>
+              <div class="form-row">
+                <label>
+                  <span>Мин. значение</span>
+                  <input name="min_value" type="number" step="0.01" placeholder="Для чисел" />
+                </label>
+                <label>
+                  <span>Макс. значение</span>
+                  <input name="max_value" type="number" step="0.01" placeholder="Для чисел" />
+                </label>
+              </div>
+              <div class="form-row">
+                <label>
+                  <span>Приоритет</span>
+                  <input name="priority" type="number" min="0" step="1" value="0" />
+                </label>
+                <label class="admin-checkbox">
+                  <input name="is_required" type="checkbox" />
+                  <span>Обязательный</span>
+                </label>
+              </div>
+              <button class="button primary" type="submit">Создать и назначить</button>
+              <div id="categoryParametersList" class="compact-list"></div>
             </form>
           </div>
 

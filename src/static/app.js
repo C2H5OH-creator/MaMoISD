@@ -1,8 +1,11 @@
 const state = {
   categories: [],
   products: [],
+  enumerations: [],
+  enumerationDetails: [],
   enumValues: {},
   cart: loadCart(),
+  auth: loadAuth(),
   draftFilters: {
     query: "",
     categoryId: "",
@@ -57,6 +60,13 @@ const els = {
   productCategorySelect: document.querySelector("#productCategorySelect"),
   categoryForm: document.querySelector("#categoryForm"),
   productForm: document.querySelector("#productForm"),
+  enumerationForm: document.querySelector("#enumerationForm"),
+  enumValueForm: document.querySelector("#enumValueForm"),
+  parameterForm: document.querySelector("#parameterForm"),
+  adminForms: document.querySelector("#adminForms"),
+  loginForm: document.querySelector("#loginForm"),
+  logoutButton: document.querySelector("#logoutButton"),
+  authStatus: document.querySelector("#authStatus"),
   adminMessage: document.querySelector("#adminMessage"),
   categoryFormTitle: document.querySelector("#categoryFormTitle"),
   productFormTitle: document.querySelector("#productFormTitle"),
@@ -64,6 +74,19 @@ const els = {
   productSubmitButton: document.querySelector("#productSubmitButton"),
   categoryCancelButton: document.querySelector("#categoryCancelButton"),
   productCancelButton: document.querySelector("#productCancelButton"),
+  specRows: document.querySelector("#specRows"),
+  addSpecButton: document.querySelector("#addSpecButton"),
+  enumValueEnumSelect: document.querySelector("#enumValueEnumSelect"),
+  enumItemTypeSelect: document.querySelector("#enumItemTypeSelect"),
+  enumValueTextWrap: document.querySelector("#enumValueTextWrap"),
+  enumChildWrap: document.querySelector("#enumChildWrap"),
+  enumChildSelect: document.querySelector("#enumChildSelect"),
+  enumValuesList: document.querySelector("#enumValuesList"),
+  parameterCategorySelect: document.querySelector("#parameterCategorySelect"),
+  parameterTypeSelect: document.querySelector("#parameterTypeSelect"),
+  parameterEnumWrap: document.querySelector("#parameterEnumWrap"),
+  parameterEnumSelect: document.querySelector("#parameterEnumSelect"),
+  categoryParametersList: document.querySelector("#categoryParametersList"),
 };
 
 function loadCart() {
@@ -90,6 +113,47 @@ function saveCart() {
   localStorage.setItem("mispris-cart", JSON.stringify(state.cart));
 }
 
+function loadAuth() {
+  try {
+    const rawAuth = localStorage.getItem("mispris-auth");
+    if (!rawAuth) {
+      return null;
+    }
+    const auth = JSON.parse(rawAuth);
+    if (!auth?.accessToken || !auth?.role || !auth?.expiresAt) {
+      return null;
+    }
+    if (Number(auth.expiresAt) <= Date.now()) {
+      localStorage.removeItem("mispris-auth");
+      return null;
+    }
+    return auth;
+  } catch {
+    return null;
+  }
+}
+
+function saveAuth(auth) {
+  if (!auth) {
+    localStorage.removeItem("mispris-auth");
+    return;
+  }
+  localStorage.setItem("mispris-auth", JSON.stringify(auth));
+}
+
+function isAdmin() {
+  return state.auth?.role === "admin";
+}
+
+function getAuthHeaders() {
+  if (!state.auth?.accessToken) {
+    return {};
+  }
+  return {
+    Authorization: `Bearer ${state.auth.accessToken}`,
+  };
+}
+
 async function fetchJson(url, options = {}) {
   const response = await fetch(url, options);
   if (!response.ok) {
@@ -101,6 +165,9 @@ async function fetchJson(url, options = {}) {
       // Response body is optional for error states.
     }
     throw new Error(detail);
+  }
+  if (response.status === 204) {
+    return null;
   }
   return response.json();
 }
@@ -147,6 +214,48 @@ function getAvailableSpecs() {
     }
   }
   return [...names].sort((left, right) => left.localeCompare(right, "ru"));
+}
+
+function getFinalEnumValues() {
+  return state.enumerationDetails.flatMap((enumeration) =>
+    (enumeration.values ?? [])
+      .filter((item) => item.item_type === "value" && item.value !== null)
+      .map((item) => ({
+        id: item.id,
+        value: item.value,
+        enumId: enumeration.id,
+        enumName: enumeration.name,
+      })),
+  );
+}
+
+function fillEnumerationSelect(select, placeholder, excludeEnumId = null) {
+  select.innerHTML = "";
+  const defaultOption = document.createElement("option");
+  defaultOption.value = "";
+  defaultOption.textContent = placeholder;
+  select.append(defaultOption);
+
+  for (const enumeration of state.enumerations) {
+    if (excludeEnumId !== null && enumeration.id === excludeEnumId) {
+      continue;
+    }
+    const option = document.createElement("option");
+    option.value = String(enumeration.id);
+    option.textContent = enumeration.name;
+    select.append(option);
+  }
+}
+
+function fillEnumValueSelect(select, selectedValue = "") {
+  select.innerHTML = '<option value="">Выберите значение</option>';
+  for (const item of getFinalEnumValues()) {
+    const option = document.createElement("option");
+    option.value = String(item.id);
+    option.textContent = `${item.enumName}: ${item.value}`;
+    select.append(option);
+  }
+  select.value = selectedValue ? String(selectedValue) : "";
 }
 
 function getPriceBounds() {
@@ -325,10 +434,161 @@ function fillCategorySelect(select, placeholder, includeRoot = false) {
   }
 }
 
+function addSpecRow(spec = {}) {
+  const row = document.createElement("div");
+  row.className = "spec-row";
+  row.innerHTML = `
+    <input name="spec_name" type="text" maxlength="255" placeholder="Название характеристики" value="${escapeHtml(spec.name ?? "")}" />
+    <select name="spec_type">
+      <option value="value">Произвольное значение</option>
+      <option value="enum">Из перечисления</option>
+    </select>
+    <input name="spec_value" type="text" maxlength="1000" placeholder="Значение" value="${escapeHtml(spec.value ?? "")}" />
+    <select name="spec_enum_value_id"></select>
+    <button class="button ghost" type="button" data-action="remove-spec-row">Удалить</button>
+  `;
+
+  const typeSelect = row.querySelector('[name="spec_type"]');
+  const valueInput = row.querySelector('[name="spec_value"]');
+  const enumSelect = row.querySelector('[name="spec_enum_value_id"]');
+  fillEnumValueSelect(enumSelect, spec.enum_value_id ?? "");
+  typeSelect.value = spec.enum_value_id ? "enum" : "value";
+
+  function syncSpecRow() {
+    const enumMode = typeSelect.value === "enum";
+    valueInput.hidden = enumMode;
+    enumSelect.hidden = !enumMode;
+  }
+
+  typeSelect.addEventListener("change", syncSpecRow);
+  syncSpecRow();
+  els.specRows.append(row);
+}
+
+function resetSpecRows(specifications = []) {
+  els.specRows.innerHTML = "";
+  if (specifications.length === 0) {
+    addSpecRow();
+    return;
+  }
+  for (const specification of specifications) {
+    addSpecRow(specification);
+  }
+}
+
+function readProductSpecifications() {
+  const specs = [];
+  for (const row of els.specRows.querySelectorAll(".spec-row")) {
+    const name = row.querySelector('[name="spec_name"]').value.trim();
+    const type = row.querySelector('[name="spec_type"]').value;
+    if (!name) {
+      continue;
+    }
+    if (type === "enum") {
+      const enumValueId = row.querySelector('[name="spec_enum_value_id"]').value;
+      if (!enumValueId) {
+        throw new Error(`Для характеристики "${name}" нужно выбрать значение перечисления`);
+      }
+      specs.push({
+        name,
+        enum_value_id: Number(enumValueId),
+      });
+    } else {
+      const value = row.querySelector('[name="spec_value"]').value.trim();
+      if (!value) {
+        throw new Error(`Для характеристики "${name}" нужно заполнить значение`);
+      }
+      specs.push({
+        name,
+        value,
+      });
+    }
+  }
+  return specs;
+}
+
+function renderEnumerationControls() {
+  const currentEnumValueEnumId = els.enumValueEnumSelect.value;
+  const currentChildEnumId = els.enumChildSelect.value;
+  const currentParameterEnumId = els.parameterEnumSelect.value;
+  fillEnumerationSelect(els.enumValueEnumSelect, "Выберите перечисление");
+  els.enumValueEnumSelect.value = currentEnumValueEnumId;
+  fillEnumerationSelect(els.parameterEnumSelect, "Выберите перечисление");
+  els.parameterEnumSelect.value = currentParameterEnumId;
+
+  const selectedEnumId = Number(els.enumValueEnumSelect.value);
+  fillEnumerationSelect(
+    els.enumChildSelect,
+    "Выберите перечисление",
+    Number.isFinite(selectedEnumId) ? selectedEnumId : null,
+  );
+  els.enumChildSelect.value = currentChildEnumId;
+  renderEnumValuesList();
+
+  for (const enumSelect of els.specRows.querySelectorAll('[name="spec_enum_value_id"]')) {
+    const currentValue = enumSelect.value;
+    fillEnumValueSelect(enumSelect, currentValue);
+  }
+}
+
+function renderEnumValuesList() {
+  const enumId = Number(els.enumValueEnumSelect.value);
+  const enumeration = state.enumerationDetails.find((item) => item.id === enumId);
+  if (!enumeration) {
+    els.enumValuesList.innerHTML = '<p>Выберите перечисление, чтобы увидеть значения.</p>';
+    return;
+  }
+  const values = enumeration.values ?? [];
+  if (values.length === 0) {
+    els.enumValuesList.innerHTML = '<p>Значения пока не добавлены.</p>';
+    return;
+  }
+  els.enumValuesList.innerHTML = values
+    .map((item) => {
+      const label = item.item_type === "enum" ? `enum: ${escapeHtml(item.child_name ?? "")}` : escapeHtml(item.value ?? "");
+      return `<p><strong>${label}</strong><span>приоритет ${item.priority}</span></p>`;
+    })
+    .join("");
+}
+
+async function renderCategoryParametersList() {
+  const categoryId = Number(els.parameterCategorySelect.value);
+  if (!categoryId) {
+    els.categoryParametersList.innerHTML = '<p>Выберите категорию, чтобы увидеть параметры.</p>';
+    return;
+  }
+  try {
+    const parameters = await fetchJson(`/database/categories/${categoryId}/parameters`);
+    if (parameters.length === 0) {
+      els.categoryParametersList.innerHTML = '<p>Параметры пока не назначены.</p>';
+      return;
+    }
+    els.categoryParametersList.innerHTML = parameters
+      .map((item) => {
+        const parameter = item.parameter;
+        const inherited = item.is_inherited ? "унаследован" : "собственный";
+        const bounds = item.min_value !== null || item.max_value !== null
+          ? `, диапазон ${item.min_value ?? "-∞"}...${item.max_value ?? "+∞"}`
+          : "";
+        return `<p><strong>${escapeHtml(parameter?.name ?? `#${item.parameter_id}`)}</strong><span>${escapeHtml(parameter?.parameter_type ?? "")}, ${inherited}${bounds}</span></p>`;
+      })
+      .join("");
+  } catch (error) {
+    els.categoryParametersList.innerHTML = `<p>Ошибка загрузки параметров: ${escapeHtml(error.message)}</p>`;
+  }
+}
+
 function renderCategories() {
+  const currentParentCategoryId = els.parentCategorySelect.value;
+  const currentProductCategoryId = els.productCategorySelect.value;
+  const currentParameterCategoryId = els.parameterCategorySelect.value;
   fillCategorySelect(els.categorySelect, "Все категории");
   fillCategorySelect(els.parentCategorySelect, "Корневой раздел", true);
   fillCategorySelect(els.productCategorySelect, "Выберите категорию");
+  fillCategorySelect(els.parameterCategorySelect, "Выберите категорию");
+  els.parentCategorySelect.value = currentParentCategoryId;
+  els.productCategorySelect.value = currentProductCategoryId;
+  els.parameterCategorySelect.value = currentParameterCategoryId;
   els.categorySelect.value = state.draftFilters.categoryId;
 
   if (state.categories.length === 0) {
@@ -339,16 +599,21 @@ function renderCategories() {
   els.categoryGrid.innerHTML = "";
   for (const category of state.categories) {
     const productsCount = state.products.filter((product) => product.category_id === category.id).length;
+    const adminActions = isAdmin()
+      ? `
+      <div class="card-actions">
+        <button type="button" data-action="edit-category" data-id="${category.id}">Изменить</button>
+        <button type="button" data-action="delete-category" data-id="${category.id}">Удалить</button>
+      </div>
+    `
+      : "";
     const card = document.createElement("article");
     card.className = "category-card";
     card.innerHTML = `
       <strong>${escapeHtml(category.name)}</strong>
       <small>ID ${category.id}${category.parent_id ? `, родитель ${category.parent_id}` : ", корень"}</small>
       <div class="meta"><span>${productsCount} товаров</span></div>
-      <div class="card-actions">
-        <button type="button" data-action="edit-category" data-id="${category.id}">Изменить</button>
-        <button type="button" data-action="delete-category" data-id="${category.id}">Удалить</button>
-      </div>
+      ${adminActions}
     `;
     card.addEventListener("click", (event) => {
       if (event.target.closest("[data-action]")) {
@@ -379,6 +644,12 @@ function renderProducts() {
     const productLetter = escapeHtml(product.name.slice(0, 1).toUpperCase());
     const cartQuantity = getCartQuantity(product.id);
     const addToCartText = cartQuantity > 0 ? `В корзине: ${cartQuantity}` : "В корзину";
+    const adminActions = isAdmin()
+      ? `
+          <button type="button" data-action="edit-product" data-id="${product.id}">Изменить</button>
+          <button type="button" data-action="delete-product" data-id="${product.id}">Удалить</button>
+        `
+      : "";
 
     const card = document.createElement("article");
     card.className = "product-card";
@@ -395,8 +666,7 @@ function renderProducts() {
         </div>
         <div class="card-actions">
           <button type="button" data-action="add-to-cart" data-id="${product.id}">${addToCartText}</button>
-          <button type="button" data-action="edit-product" data-id="${product.id}">Изменить</button>
-          <button type="button" data-action="delete-product" data-id="${product.id}">Удалить</button>
+          ${adminActions}
         </div>
       </div>
     `;
@@ -496,6 +766,11 @@ function clearCart() {
 }
 
 async function deleteCategory(categoryId) {
+  if (!isAdmin()) {
+    showToast("Для удаления категории нужно войти как администратор.");
+    return;
+  }
+
   const category = state.categories.find((item) => item.id === categoryId);
   if (!category || !confirm(`Удалить категорию "${category.name}"?`)) {
     return;
@@ -520,6 +795,11 @@ async function deleteCategory(categoryId) {
 }
 
 async function deleteProduct(productId) {
+  if (!isAdmin()) {
+    showToast("Для удаления товара нужно войти как администратор.");
+    return;
+  }
+
   const product = state.products.find((item) => item.id === productId);
   if (!product || !confirm(`Удалить товар "${product.name}"?`)) {
     return;
@@ -561,7 +841,7 @@ function normalizeCart() {
   saveCart();
 }
 
-async function loadEnumValues() {
+async function loadEnumerationData() {
   try {
     const enumerations = await fetchJson("/database/enumerations");
     const enumDetails = await Promise.all(
@@ -577,15 +857,43 @@ async function loadEnumValues() {
         }
       }
     }
-    return values;
+    return {
+      enumerations,
+      details: enumDetails,
+      values,
+    };
   } catch {
-    return {};
+    return {
+      enumerations: [],
+      details: [],
+      values: {},
+    };
   }
 }
 
 function setAdminMessage(message, isError = false) {
   els.adminMessage.textContent = message;
   els.adminMessage.classList.toggle("is-error", isError);
+}
+
+function renderAuthState() {
+  const adminMode = isAdmin();
+  els.adminForms.hidden = !adminMode;
+  els.loginForm.hidden = Boolean(state.auth);
+  els.logoutButton.hidden = !state.auth;
+
+  if (!state.auth) {
+    els.authStatus.textContent = "Вы работаете в режиме просмотра.";
+  } else if (adminMode) {
+    els.authStatus.textContent = `Вход выполнен: ${state.auth.username}, роль администратора.`;
+  } else {
+    els.authStatus.textContent = `Вход выполнен: ${state.auth.username}, режим просмотра.`;
+  }
+
+  if (!adminMode) {
+    resetCategoryForm();
+    resetProductForm();
+  }
 }
 
 function showToast(message) {
@@ -647,20 +955,24 @@ function applyFilters() {
 }
 
 async function loadData() {
-  const [categories, products, enumValues] = await Promise.all([
+  const [categories, products, enumData] = await Promise.all([
     fetchJson("/database/categories"),
     fetchJson("/database/products"),
-    loadEnumValues(),
+    loadEnumerationData(),
   ]);
 
   state.categories = categories;
   state.products = products;
-  state.enumValues = enumValues;
+  state.enumerations = enumData.enumerations;
+  state.enumerationDetails = enumData.details;
+  state.enumValues = enumData.values;
   normalizeCart();
 
   renderStats();
   renderFilters();
   renderCategories();
+  renderEnumerationControls();
+  await renderCategoryParametersList();
   renderProducts();
   renderCart();
 }
@@ -668,7 +980,9 @@ async function loadData() {
 async function requestJson(url, method, payload = null) {
   const options = {
     method,
-    headers: {},
+    headers: {
+      ...getAuthHeaders(),
+    },
   };
 
   if (payload !== null) {
@@ -683,6 +997,7 @@ async function submitJson(url, payload) {
   return fetchJson(url, {
     method: "POST",
     headers: {
+      ...getAuthHeaders(),
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
@@ -718,6 +1033,7 @@ function resetProductForm() {
   els.productSubmitButton.textContent = "Создать товар";
   els.productCancelButton.hidden = true;
   fillCategorySelect(els.productCategorySelect, "Выберите категорию");
+  resetSpecRows();
 }
 
 function editCategory(categoryId) {
@@ -747,6 +1063,7 @@ function editProduct(productId) {
   els.productForm.elements.price.value = product.price;
   els.productForm.elements.quantity.value = product.quantity;
   els.productForm.elements.description.value = product.description ?? "";
+  resetSpecRows(product.specifications ?? []);
   els.productFormTitle.textContent = `Редактирование товара #${product.id}`;
   els.productSubmitButton.textContent = "Сохранить товар";
   els.productCancelButton.hidden = false;
@@ -755,6 +1072,11 @@ function editProduct(productId) {
 
 async function handleCategorySubmit(event) {
   event.preventDefault();
+  if (!isAdmin()) {
+    setAdminMessage("Для сохранения категории нужно войти как администратор.", true);
+    return;
+  }
+
   const formData = new FormData(els.categoryForm);
   const parentId = formData.get("parent_id");
   const currentCategory = state.categories.find((item) => item.id === state.editingCategoryId);
@@ -794,16 +1116,28 @@ async function handleCategorySubmit(event) {
 
 async function handleProductSubmit(event) {
   event.preventDefault();
+  if (!isAdmin()) {
+    setAdminMessage("Для сохранения товара нужно войти как администратор.", true);
+    return;
+  }
+
   const formData = new FormData(els.productForm);
   const description = String(formData.get("description")).trim();
   const currentProduct = state.products.find((item) => item.id === state.editingProductId);
+  let specifications = [];
+  try {
+    specifications = readProductSpecifications();
+  } catch (error) {
+    setAdminMessage(`Ошибка характеристик товара: ${error.message}`, true);
+    return;
+  }
   const payload = {
     name: String(formData.get("name")).trim(),
     category_id: Number(formData.get("category_id")),
     price: Number(formData.get("price")),
     quantity: Number(formData.get("quantity")),
     description: description || null,
-    specifications: [],
+    specifications,
   };
 
   try {
@@ -816,6 +1150,7 @@ async function handleProductSubmit(event) {
           price: payload.price,
           quantity: payload.quantity,
           description: payload.description,
+          specifications: payload.specifications,
         }),
       );
       if (payload.category_id !== currentProduct.category_id) {
@@ -836,6 +1171,118 @@ async function handleProductSubmit(event) {
   }
 }
 
+async function handleEnumerationSubmit(event) {
+  event.preventDefault();
+  if (!isAdmin()) {
+    setAdminMessage("Для создания перечисления нужно войти как администратор.", true);
+    return;
+  }
+  const formData = new FormData(els.enumerationForm);
+  const description = String(formData.get("description")).trim();
+  try {
+    await submitJson("/database/enumerations", {
+      name: String(formData.get("name")).trim(),
+      description: description || null,
+    });
+    els.enumerationForm.reset();
+    setAdminMessage("Перечисление создано");
+    await loadData();
+  } catch (error) {
+    setAdminMessage(`Ошибка создания перечисления: ${error.message}`, true);
+  }
+}
+
+async function handleEnumValueSubmit(event) {
+  event.preventDefault();
+  if (!isAdmin()) {
+    setAdminMessage("Для добавления значения нужно войти как администратор.", true);
+    return;
+  }
+  const formData = new FormData(els.enumValueForm);
+  const enumId = Number(formData.get("enum_id"));
+  const itemType = String(formData.get("item_type"));
+  const description = String(formData.get("description")).trim();
+  const payload = {
+    item_type: itemType,
+    value: null,
+    child_enum_id: null,
+    priority: Number(formData.get("priority") || 0),
+    description: description || null,
+  };
+
+  if (itemType === "enum") {
+    payload.child_enum_id = Number(formData.get("child_enum_id"));
+  } else {
+    payload.value = String(formData.get("value")).trim();
+  }
+
+  try {
+    await submitJson(`/database/enumerations/${enumId}/values`, payload);
+    const selectedEnumId = els.enumValueEnumSelect.value;
+    els.enumValueForm.reset();
+    els.enumValueEnumSelect.value = selectedEnumId;
+    toggleEnumValueMode();
+    setAdminMessage("Значение перечисления добавлено");
+    await loadData();
+    els.enumValueEnumSelect.value = selectedEnumId;
+    renderEnumerationControls();
+  } catch (error) {
+    setAdminMessage(`Ошибка добавления значения: ${error.message}`, true);
+  }
+}
+
+async function handleParameterSubmit(event) {
+  event.preventDefault();
+  if (!isAdmin()) {
+    setAdminMessage("Для назначения параметра нужно войти как администратор.", true);
+    return;
+  }
+  const formData = new FormData(els.parameterForm);
+  const parameterType = String(formData.get("parameter_type"));
+  const categoryId = Number(formData.get("category_id"));
+  const code = String(formData.get("code")).trim();
+  const description = null;
+  const enumId = formData.get("enum_id");
+  const minValue = formData.get("min_value");
+  const maxValue = formData.get("max_value");
+
+  try {
+    const parameter = await submitJson("/database/parameters", {
+      code,
+      name: String(formData.get("name")).trim(),
+      description,
+      parameter_type: parameterType,
+      unit_id: null,
+      enum_id: parameterType === "enum" ? Number(enumId) : null,
+    });
+    await submitJson(`/database/categories/${categoryId}/parameters`, {
+      parameter_id: parameter.id,
+      priority: Number(formData.get("priority") || 0),
+      is_required: formData.get("is_required") === "on",
+      min_value: minValue === "" ? null : Number(minValue),
+      max_value: maxValue === "" ? null : Number(maxValue),
+    });
+    const selectedCategoryId = els.parameterCategorySelect.value;
+    els.parameterForm.reset();
+    els.parameterCategorySelect.value = selectedCategoryId;
+    toggleParameterEnumMode();
+    setAdminMessage("Параметр создан и назначен категории. Потомки получили его как унаследованный.");
+    await renderCategoryParametersList();
+  } catch (error) {
+    setAdminMessage(`Ошибка назначения параметра: ${error.message}`, true);
+  }
+}
+
+function toggleEnumValueMode() {
+  const enumMode = els.enumItemTypeSelect.value === "enum";
+  els.enumValueTextWrap.hidden = enumMode;
+  els.enumChildWrap.hidden = !enumMode;
+}
+
+function toggleParameterEnumMode() {
+  els.parameterEnumWrap.hidden = els.parameterTypeSelect.value !== "enum";
+}
+
 async function handleCardAction(event) {
   const button = event.target.closest("[data-action]");
   if (!button) {
@@ -844,6 +1291,14 @@ async function handleCardAction(event) {
 
   event.stopPropagation();
   const id = Number(button.dataset.id);
+  if (
+    ["edit-category", "delete-category", "edit-product", "delete-product"].includes(button.dataset.action)
+    && !isAdmin()
+  ) {
+    showToast("Для редактирования данных нужно войти как администратор.");
+    return;
+  }
+
   if (button.dataset.action === "edit-category") {
     editCategory(id);
   } else if (button.dataset.action === "delete-category") {
@@ -865,7 +1320,58 @@ async function handleCardAction(event) {
     }
   } else if (button.dataset.action === "remove-from-cart") {
     removeFromCart(id);
+  } else if (button.dataset.action === "remove-spec-row") {
+    button.closest(".spec-row")?.remove();
+    if (els.specRows.children.length === 0) {
+      addSpecRow();
+    }
   }
+}
+
+async function handleLoginSubmit(event) {
+  event.preventDefault();
+  const formData = new FormData(els.loginForm);
+  const payload = {
+    username: String(formData.get("username")).trim(),
+    password: String(formData.get("password")),
+  };
+
+  try {
+    const response = await fetchJson("/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    state.auth = {
+      accessToken: response.access_token,
+      username: response.username,
+      role: response.role,
+      expiresAt: Date.now() + Number(response.expires_in) * 1000,
+    };
+    saveAuth(state.auth);
+    els.loginForm.reset();
+    renderAuthState();
+    renderCategories();
+    renderProducts();
+    setAdminMessage(
+      isAdmin()
+        ? "Вход выполнен. Доступно редактирование данных."
+        : "Вход выполнен. Доступен режим просмотра.",
+    );
+  } catch (error) {
+    setAdminMessage(`Ошибка входа: ${error.message}`, true);
+  }
+}
+
+function handleLogout() {
+  state.auth = null;
+  saveAuth(null);
+  renderAuthState();
+  renderCategories();
+  renderProducts();
+  setAdminMessage("Вы вышли из режима администратора.");
 }
 
 function handleCartInput(event) {
@@ -904,8 +1410,10 @@ function resetFilters() {
 }
 
 async function init() {
+  renderAuthState();
   try {
     await loadData();
+    renderAuthState();
   } catch (error) {
     renderError(error);
   }
@@ -913,10 +1421,20 @@ async function init() {
 
 els.applyFiltersButton.addEventListener("click", applyFilters);
 els.resetFiltersButton.addEventListener("click", resetFilters);
+els.loginForm.addEventListener("submit", handleLoginSubmit);
+els.logoutButton.addEventListener("click", handleLogout);
 els.categoryForm.addEventListener("submit", handleCategorySubmit);
 els.productForm.addEventListener("submit", handleProductSubmit);
+els.enumerationForm.addEventListener("submit", handleEnumerationSubmit);
+els.enumValueForm.addEventListener("submit", handleEnumValueSubmit);
+els.parameterForm.addEventListener("submit", handleParameterSubmit);
 els.categoryCancelButton.addEventListener("click", resetCategoryForm);
 els.productCancelButton.addEventListener("click", resetProductForm);
+els.addSpecButton.addEventListener("click", () => addSpecRow());
+els.enumValueEnumSelect.addEventListener("change", renderEnumerationControls);
+els.enumItemTypeSelect.addEventListener("change", toggleEnumValueMode);
+els.parameterCategorySelect.addEventListener("change", renderCategoryParametersList);
+els.parameterTypeSelect.addEventListener("change", toggleParameterEnumMode);
 els.clearCartButton.addEventListener("click", clearCart);
 els.checkoutButton.addEventListener("click", () => {
   showToast("Оформление заказа пока не реализовано.");

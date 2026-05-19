@@ -3,8 +3,8 @@
 import requests
 from typing import Any
 
-BASE_URL = "http://localhost:8000/database"
-
+#BASE_URL = "http://localhost:8000/database"
+BASE_URL = "http://mispris.c3h8o.ru/database"
 
 def request(method: str, path: str, json: dict[str, Any] | None = None):
     url = f"{BASE_URL}{path}"

@@ -1,0 +1,87 @@
+\documentclass[a4paper,14pt]{extarticle}
+\usepackage{geometry}
+\geometry{top=20mm,bottom=20mm,left=30mm,right=10mm} % поля по требованиям оформления
+\usepackage{fontspec}
+\usepackage[russian]{babel}
+% \setmainfont{Liberation Serif}
+\setmainfont{Times New Roman}
+\usepackage{setspace}
+\usepackage{indentfirst}
+\usepackage{titlesec}
+
+\usepackage{amsmath}
+\usepackage{caption}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage{array}
+\usepackage{tocloft}
+\usepackage[hidelinks]{hyperref}
+
+\setcounter{tocdepth}{3}
+\onehalfspacing
+\setlength{\parindent}{1.25cm}
+\pagestyle{plain}
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+\renewcommand{\cftsubsecleader}{\cftdotfill{\cftdotsep}}
+\renewcommand{\cftsubsubsecleader}{\cftdotfill{\cftdotsep}}
+
+\titleformat{\section}{\centering\normalfont\bfseries}{\thesection}{1em}{\MakeUppercase}
+\titleformat{name=\section,numberless}{\centering\normalfont\bfseries}{}{0pt}{\MakeUppercase}
+\titleformat{\subsection}{\centering\normalfont\bfseries}{\thesubsection}{1em}{\MakeUppercase}
+\titleformat{\subsubsection}{\centering\normalfont\bfseries}{\thesubsubsection}{1em}{\MakeUppercase}
+\titlespacing*{\section}{0pt}{0pt}{1.5\baselineskip}
+\titlespacing*{\subsection}{0pt}{1.5\baselineskip}{1.5\baselineskip}
+\titlespacing*{\subsubsection}{0pt}{1.5\baselineskip}{1.5\baselineskip}
+\newcommand{\sectionbreak}{\clearpage}
+\definecolor{paletteAccent}{HTML}{931F1D}
+\definecolor{paletteGreen}{HTML}{256D1B}
+\definecolor{paletteBlack}{HTML}{0C0C0C}
+\definecolor{paletteWhite}{HTML}{FFFFFF}
+\newcommand{\colorswatch}[1]{\tikz[baseline=-0.5ex]\draw[fill=#1,draw=black] (0,0) rectangle (0.45cm,0.45cm);}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    {МИНОБРНАУКИ РОССИИ\par}
+    \vspace{0.5em}
+    {САНКТ-ПЕТЕРБУРГСКИЙ ГОСУДАРСТВЕННЫЙ\par}
+    {ЭЛЕКТРОТЕХНИЧЕСКИЙ УНИВЕРСИТЕТ\par}
+    {«ЛЭТИ» ИМ. В.И. УЛЬЯНОВА (ЛЕНИНА)\par}
+    \vspace{1em}
+    {Кафедра информационных систем\par}
+
+    \vspace{6em}
+
+    {\textbf{ПРАКТИЧЕСКАЯ РАБОТА №4}\par}
+    \vspace{0.8em}
+    {по дисциплине «Методы и средства проектирования информационных систем»\par}
+    \vspace{0.8em}
+    {Тема: «ПК и Сервера»\par} % впишите тему или оставьте линию
+    %\vspace{0.8em}
+    %{\large Вариант №\par} % впишите тему или оставьте линию
+
+    \vfill % «утопить» нижний блок к низу страницы
+
+    \begin{flushleft}
+    \begin{tabular*}{\linewidth}{@{}l@{\extracolsep{\fill}}c@{\extracolsep{\fill}}r@{}}
+    Студент гр. 3376  & \rule{4cm}{0.4pt} & Михайлов Н.Ф.\\[0.5em]
+    Студентка гр. 3376 & \rule{4cm}{0.4pt} & Дегтярева М. И.\\[0.5em]
+    Студент гр. 3376  & \rule{4cm}{0.4pt} & Константинов Р. И.\\[0.5em]
+    Преподаватель     & \rule{4cm}{0.4pt} & Дюков Н.В.
+    \end{tabular*}
+    \end{flushleft}
+
+    \vspace{3em}
+
+    Санкт-Петербург\par
+    2026
+\end{titlepage}
+
+
+
+\end{document}

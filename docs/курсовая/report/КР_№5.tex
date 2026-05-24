@@ -29,6 +29,12 @@
 \renewcommand{\cftsubsecleader}{\cftdotfill{\cftdotsep}}
 \renewcommand{\cftsubsubsecleader}{\cftdotfill{\cftdotsep}}
 
+% \usepackage[russian]{babel}
+% \usepackage[none]{hyphenat}
+
+% \hyphenpenalty=10000
+% \exhyphenpenalty=10000
+
 \titleformat{\section}{\centering\normalfont\bfseries}{\thesection}{1em}{\MakeUppercase}
 \titleformat{name=\section,numberless}{\centering\normalfont\bfseries}{}{0pt}{\MakeUppercase}
 \titleformat{\subsection}{\centering\normalfont\bfseries}{\thesubsection}{1em}{\MakeUppercase}
@@ -242,7 +248,7 @@ The application stores categories, products, specifications, \\ parameters, enum
 
 \subsubsection{Архитектура информационной системы}
 
-Приложение представляет собой модульное монолитное web-приложение. Серверная часть, API, логика работы со справочником и отдача статических файлов находятся в одном Python-приложении. Отдельного frontend-сервера нет: страница интерфейса, стили и JavaScript-файл отдаются тем же FastAPI-приложением, которое обрабатывает REST-запросы.
+Приложение представляет собой модульное монолитное web-приложение. Серверная часть, API, логика работы со справочником и отдача статических файлов находятся в одном Python-приложении. Отдельный сервер для frontend-части не используется. Страница интерфейса, стили и JavaScript отдаются тем же приложением FastAPI, которое обрабатывает REST-запросы.
 
 Точка входа приложения находится в файле \texttt{src/main.py}. При запуске создаётся объект \texttt{FastAPI}, подключаются маршруты API, монтируется директория \texttt{src/static}, а корневой адрес \texttt{/} отдаёт файл \texttt{index.html}. В жизненном цикле приложения также выполняется подготовка базы данных: создаётся база при необходимости, создаются таблицы и закрывается подключение при остановке сервера.
 
@@ -250,10 +256,10 @@ The application stores categories, products, specifications, \\ parameters, enum
 \begin{enumerate}
     \item Серверное приложение на FastAPI. Оно принимает HTTP-запросы, маршрутизирует их и возвращает ответы в формате JSON. Основные маршруты собраны в \texttt{src/api/database.py}; общий роутер подключается через \texttt{src/api/\_\_init\_\_.py}. Для проверки работы сервера и получения общей информации используется отдельный модуль \texttt{src/api/info.py}.
     \item Модели запросов и ответов. В файле \texttt{src/api/models.py} описаны Pydantic-модели для категорий, товаров, спецификаций, параметров, перечислений, единиц измерения и значений параметров. Эти модели проверяют входные данные до передачи их в слой работы с базой.
-    \item Слой работы с базой данных. Основная логика находится в \texttt{src/db/database.py}. В этом файле описаны таблицы SQLAlchemy Core, ограничения, связи между таблицами и функции для создания, чтения, изменения и удаления данных. Здесь же реализована проверка бизнес-правил: например, запрет отрицательной цены, проверка значений перечислений и проверка диапазонов числовых параметров.
+    \item Слой работы с базой данных. Основная логика находится в \\ \texttt{src/db/database.py}. В этом файле описаны таблицы SQLAlchemy Core, ограничения, связи между таблицами и функции для создания, чтения, изменения и удаления данных. Здесь же реализована проверка бизнес-правил: например, запрет отрицательной цены, проверка значений перечислений и проверка диапазонов числовых параметров.
     \item База данных PostgreSQL. PostgreSQL используется как внешнее хранилище справочника. В базе находятся категории, товары, характеристики, перечисления, значения перечислений, единицы измерения, параметры категорий и значения параметров конкретных товаров.
-    \item Статический frontend. Пользовательский интерфейс состоит из файлов \texttt{src/static/index.html}, \texttt{src/static/styles.css} и \texttt{src/static/app.js}. Клиентская часть загружает данные через REST API, отображает витрину, фильтры, корзину и административные формы. Корзина хранится на стороне браузера в \texttt{localStorage}.
-    \item Контейнеризация. Для запуска проекта используется \texttt{Dockerfile} и \texttt{docker-compose.yml}. В compose-файле описаны два сервиса: API-приложение и PostgreSQL. API запускается после проверки готовности базы данных.
+    \item Статический frontend. Пользовательский интерфейс состоит из файлов \texttt{src/static/index.html}, \texttt{src/static/styles.css} и \\ \texttt{src/static/app.js}. Клиентская часть загружает данные через REST API, отображает витрину, фильтры, корзину и административные формы. Корзина хранится на стороне браузера в \texttt{localStorage}.
+    \item Контейнеризация. Для запуска проекта используется \texttt{Dockerfile} и \\ \texttt{docker-compose.yml}. В compose-файле описаны два сервиса: \\ API-приложение и PostgreSQL. API запускается после проверки готовности базы данных.
 \end{enumerate}
 
 Таким образом, приложение остаётся монолитным с точки зрения развёртывания, но внутри разделено на понятные модули: входная точка, API, схемы данных, функции работы с БД и статический интерфейс. Такой вариант проще поддерживать в рамках курсовой работы и достаточно хорошо подходит для справочника, где все основные операции связаны с одной базой данных.
@@ -262,186 +268,194 @@ The application stores categories, products, specifications, \\ parameters, enum
 
 Диаграмма классов отражает основные классы предметной области и интерфейсные классы web-приложения. Классы предметной области описывают структуру справочника изделий, параметры, перечисления и единицы измерения. Интерфейсные классы соответствуют основным экранам и блокам пользовательского интерфейса: витрине, фильтрам, корзине, форме входа и административным формам.
 
+% \begin{figure}[H]
+% \centering
+% \resizebox{\textwidth}{!}{%
+% \begin{tikzpicture}[
+%     classbox/.style={
+%         draw,
+%         rounded corners,
+%         align=left,
+%         font=\scriptsize,
+%         inner sep=4pt,
+%         text width=4.5cm
+%     },
+%     interface/.style={
+%         draw,
+%         rounded corners,
+%         align=left,
+%         font=\scriptsize,
+%         inner sep=4pt,
+%         text width=4.8cm,
+%         fill=gray!8
+%     },
+%     relation/.style={-{Latex[length=2mm]}, thick},
+%     dependency/.style={-{Latex[length=2mm]}, dashed, thick},
+%     reltext/.style={font=\scriptsize, fill=white, inner sep=1pt}
+% ]
+
+% \node[interface] (ui_catalog) at (0, 7.4) {
+% \textbf{<<interface>> CatalogView}\\
+% \texttt{renderCategories()}\\
+% \texttt{renderProducts()}\\
+% \texttt{showProductDetails()}\\
+% \texttt{addToCart()}
+% };
+
+% \node[interface] (ui_filters) at (5.8, 7.4) {
+% \textbf{<<interface>> FilterPanel}\\
+% \texttt{readDraftFilters()}\\
+% \texttt{validateFilters()}\\
+% \texttt{applyFilters()}\\
+% \texttt{resetFilters()}
+% };
+
+% \node[interface] (ui_cart) at (11.6, 7.4) {
+% \textbf{<<interface>> CartView}\\
+% \texttt{renderCart()}\\
+% \texttt{addToCart()}\\
+% \texttt{setCartQuantity()}\\
+% \texttt{removeFromCart()}\\
+% \texttt{clearCart()}
+% };
+
+% \node[interface] (ui_auth) at (17.4, 7.4) {
+% \textbf{<<interface>> AuthForm}\\
+% \texttt{handleLoginSubmit()}\\
+% \texttt{handleLogout()}\\
+% \texttt{renderAuthState()}\\
+% \texttt{isAdmin()}
+% };
+
+% \node[interface] (ui_admin) at (17.4, 2.9) {
+% \textbf{<<interface>> AdminForms}\\
+% \texttt{handleCategorySubmit()}\\
+% \texttt{handleProductSubmit()}\\
+% \texttt{editCategory()}\\
+% \texttt{editProduct()}\\
+% \texttt{deleteProduct()}
+% };
+
+% \node[classbox] (category) at (0, 2.9) {
+% \textbf{Category}\\
+% \texttt{id}\\
+% \texttt{name}\\
+% \texttt{parent\_id}\\
+% \texttt{create/update/move/delete}
+% };
+
+% \node[classbox] (product) at (5.8, 2.9) {
+% \textbf{Product}\\
+% \texttt{id}\\
+% \texttt{name}\\
+% \texttt{category\_id}\\
+% \texttt{price}\\
+% \texttt{quantity}\\
+% \texttt{specifications}
+% };
+
+% \node[classbox] (specification) at (11.6, 2.9) {
+% \textbf{Specification}\\
+% \texttt{id}\\
+% \texttt{name}\\
+% \texttt{value}\\
+% \texttt{enum\_value\_id}\\
+% \texttt{unit\_id}\\
+% \texttt{custom unit}
+% };
+
+% \node[classbox] (parameter) at (0, -1.6) {
+% \textbf{Parameter}\\
+% \texttt{id}\\
+% \texttt{code}\\
+% \texttt{name}\\
+% \texttt{parameter\_type}\\
+% \texttt{unit\_id}\\
+% \texttt{enum\_id}
+% };
+
+% \node[classbox] (category_parameter) at (5.8, -1.6) {
+% \textbf{CategoryParameter}\\
+% \texttt{category\_id}\\
+% \texttt{parameter\_id}\\
+% \texttt{priority}\\
+% \texttt{is\_required}\\
+% \texttt{is\_inherited}\\
+% \texttt{min/max value}
+% };
+
+% \node[classbox] (product_parameter_value) at (11.6, -1.6) {
+% \textbf{ProductParameterValue}\\
+% \texttt{product\_id}\\
+% \texttt{parameter\_id}\\
+% \texttt{val\_real}\\
+% \texttt{val\_int}\\
+% \texttt{val\_str}\\
+% \texttt{val\_datetime}\\
+% \texttt{enum\_value\_id}
+% };
+
+% \node[classbox] (enumeration) at (0, -6.1) {
+% \textbf{Enumeration}\\
+% \texttt{id}\\
+% \texttt{name}\\
+% \texttt{description}\\
+% \texttt{created\_at}\\
+% \texttt{updated\_at}
+% };
+
+% \node[classbox] (enumeration_value) at (5.8, -6.1) {
+% \textbf{EnumerationValue}\\
+% \texttt{id}\\
+% \texttt{enum\_id}\\
+% \texttt{item\_type}\\
+% \texttt{value}\\
+% \texttt{child\_enum\_id}\\
+% \texttt{priority}
+% };
+
+% \node[classbox] (unit) at (11.6, -6.1) {
+% \textbf{MeasurementUnit}\\
+% \texttt{id}\\
+% \texttt{full\_name}\\
+% \texttt{short\_name}\\
+% \texttt{description}
+% };
+
+% \draw[dependency] (ui_catalog) -- node[reltext, left]{shows} (category);
+% \draw[dependency] (ui_catalog) -- node[reltext, left]{shows} (product);
+% \draw[dependency] (ui_filters) -- node[reltext, left]{filters} (product);
+% \draw[dependency] (ui_filters) -- node[reltext, right]{by specs} (specification);
+% \draw[dependency] (ui_cart) -- node[reltext, right]{contains} (product);
+% \draw[dependency] (ui_auth) -- node[reltext, right]{opens access} (ui_admin);
+% \draw[dependency] (ui_admin) -- node[reltext, above]{edits} (category);
+% \draw[dependency] (ui_admin) -- node[reltext, right]{edits} (product);
+
+% \draw[relation] (category) -- node[reltext, above]{1:N} (product);
+% \draw[relation] (product) -- node[reltext, above]{N:M} (specification);
+% \draw[relation] (category) -- node[reltext, above]{1:N} (category_parameter);
+% \draw[relation] (parameter) -- node[reltext, above]{1:N} (category_parameter);
+% \draw[relation] (product) -- node[reltext, above]{1:N} (product_parameter_value);
+% \draw[relation] (parameter) -- node[reltext, above]{1:N} (product_parameter_value);
+% \draw[relation] (enumeration) -- node[reltext, above]{1:N} (enumeration_value);
+% \draw[relation] (enumeration) to[bend right=18] node[reltext, below]{nested enum} (enumeration_value);
+% \draw[relation] (enumeration) -- node[reltext, left]{type} (parameter);
+% \draw[relation] (unit) -- node[reltext, right]{unit} (parameter);
+% \draw[relation] (unit) -- node[reltext, right]{unit} (specification);
+% \draw[relation] (enumeration_value) -- node[reltext, right]{enum value} (specification);
+% \draw[relation] (enumeration_value) -- node[reltext, above]{enum value} (product_parameter_value);
+
+% \end{tikzpicture}%
+% }
+% \caption{Диаграмма классов приложения}
+% \end{figure}
+
 \begin{figure}[H]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[
-    classbox/.style={
-        draw,
-        rounded corners,
-        align=left,
-        font=\scriptsize,
-        inner sep=4pt,
-        text width=4.5cm
-    },
-    interface/.style={
-        draw,
-        rounded corners,
-        align=left,
-        font=\scriptsize,
-        inner sep=4pt,
-        text width=4.8cm,
-        fill=gray!8
-    },
-    relation/.style={-{Latex[length=2mm]}, thick},
-    dependency/.style={-{Latex[length=2mm]}, dashed, thick},
-    reltext/.style={font=\scriptsize, fill=white, inner sep=1pt}
-]
-
-\node[interface] (ui_catalog) at (0, 7.4) {
-\textbf{<<interface>> CatalogView}\\
-\texttt{renderCategories()}\\
-\texttt{renderProducts()}\\
-\texttt{showProductDetails()}\\
-\texttt{addToCart()}
-};
-
-\node[interface] (ui_filters) at (5.8, 7.4) {
-\textbf{<<interface>> FilterPanel}\\
-\texttt{readDraftFilters()}\\
-\texttt{validateFilters()}\\
-\texttt{applyFilters()}\\
-\texttt{resetFilters()}
-};
-
-\node[interface] (ui_cart) at (11.6, 7.4) {
-\textbf{<<interface>> CartView}\\
-\texttt{renderCart()}\\
-\texttt{addToCart()}\\
-\texttt{setCartQuantity()}\\
-\texttt{removeFromCart()}\\
-\texttt{clearCart()}
-};
-
-\node[interface] (ui_auth) at (17.4, 7.4) {
-\textbf{<<interface>> AuthForm}\\
-\texttt{handleLoginSubmit()}\\
-\texttt{handleLogout()}\\
-\texttt{renderAuthState()}\\
-\texttt{isAdmin()}
-};
-
-\node[interface] (ui_admin) at (17.4, 2.9) {
-\textbf{<<interface>> AdminForms}\\
-\texttt{handleCategorySubmit()}\\
-\texttt{handleProductSubmit()}\\
-\texttt{editCategory()}\\
-\texttt{editProduct()}\\
-\texttt{deleteProduct()}
-};
-
-\node[classbox] (category) at (0, 2.9) {
-\textbf{Category}\\
-\texttt{id}\\
-\texttt{name}\\
-\texttt{parent\_id}\\
-\texttt{create/update/move/delete}
-};
-
-\node[classbox] (product) at (5.8, 2.9) {
-\textbf{Product}\\
-\texttt{id}\\
-\texttt{name}\\
-\texttt{category\_id}\\
-\texttt{price}\\
-\texttt{quantity}\\
-\texttt{specifications}
-};
-
-\node[classbox] (specification) at (11.6, 2.9) {
-\textbf{Specification}\\
-\texttt{id}\\
-\texttt{name}\\
-\texttt{value}\\
-\texttt{enum\_value\_id}\\
-\texttt{unit\_id}\\
-\texttt{custom unit}
-};
-
-\node[classbox] (parameter) at (0, -1.6) {
-\textbf{Parameter}\\
-\texttt{id}\\
-\texttt{code}\\
-\texttt{name}\\
-\texttt{parameter\_type}\\
-\texttt{unit\_id}\\
-\texttt{enum\_id}
-};
-
-\node[classbox] (category_parameter) at (5.8, -1.6) {
-\textbf{CategoryParameter}\\
-\texttt{category\_id}\\
-\texttt{parameter\_id}\\
-\texttt{priority}\\
-\texttt{is\_required}\\
-\texttt{is\_inherited}\\
-\texttt{min/max value}
-};
-
-\node[classbox] (product_parameter_value) at (11.6, -1.6) {
-\textbf{ProductParameterValue}\\
-\texttt{product\_id}\\
-\texttt{parameter\_id}\\
-\texttt{val\_real}\\
-\texttt{val\_int}\\
-\texttt{val\_str}\\
-\texttt{val\_datetime}\\
-\texttt{enum\_value\_id}
-};
-
-\node[classbox] (enumeration) at (0, -6.1) {
-\textbf{Enumeration}\\
-\texttt{id}\\
-\texttt{name}\\
-\texttt{description}\\
-\texttt{created\_at}\\
-\texttt{updated\_at}
-};
-
-\node[classbox] (enumeration_value) at (5.8, -6.1) {
-\textbf{EnumerationValue}\\
-\texttt{id}\\
-\texttt{enum\_id}\\
-\texttt{item\_type}\\
-\texttt{value}\\
-\texttt{child\_enum\_id}\\
-\texttt{priority}
-};
-
-\node[classbox] (unit) at (11.6, -6.1) {
-\textbf{MeasurementUnit}\\
-\texttt{id}\\
-\texttt{full\_name}\\
-\texttt{short\_name}\\
-\texttt{description}
-};
-
-\draw[dependency] (ui_catalog) -- node[reltext, left]{shows} (category);
-\draw[dependency] (ui_catalog) -- node[reltext, left]{shows} (product);
-\draw[dependency] (ui_filters) -- node[reltext, left]{filters} (product);
-\draw[dependency] (ui_filters) -- node[reltext, right]{by specs} (specification);
-\draw[dependency] (ui_cart) -- node[reltext, right]{contains} (product);
-\draw[dependency] (ui_auth) -- node[reltext, right]{opens access} (ui_admin);
-\draw[dependency] (ui_admin) -- node[reltext, above]{edits} (category);
-\draw[dependency] (ui_admin) -- node[reltext, right]{edits} (product);
-
-\draw[relation] (category) -- node[reltext, above]{1:N} (product);
-\draw[relation] (product) -- node[reltext, above]{N:M} (specification);
-\draw[relation] (category) -- node[reltext, above]{1:N} (category_parameter);
-\draw[relation] (parameter) -- node[reltext, above]{1:N} (category_parameter);
-\draw[relation] (product) -- node[reltext, above]{1:N} (product_parameter_value);
-\draw[relation] (parameter) -- node[reltext, above]{1:N} (product_parameter_value);
-\draw[relation] (enumeration) -- node[reltext, above]{1:N} (enumeration_value);
-\draw[relation] (enumeration) to[bend right=18] node[reltext, below]{nested enum} (enumeration_value);
-\draw[relation] (enumeration) -- node[reltext, left]{type} (parameter);
-\draw[relation] (unit) -- node[reltext, right]{unit} (parameter);
-\draw[relation] (unit) -- node[reltext, right]{unit} (specification);
-\draw[relation] (enumeration_value) -- node[reltext, right]{enum value} (specification);
-\draw[relation] (enumeration_value) -- node[reltext, above]{enum value} (product_parameter_value);
-
-\end{tikzpicture}%
-}
-\caption{Диаграмма классов приложения}
+    \centering
+    \IfFileExists{img/CLSD5.pdf}
+        {\includegraphics[width=0.95\textwidth]{img/CLSD5.pdf}}
+        {\fbox{\parbox{0.9\textwidth}{\centering Место для вставки файла \texttt{img/CLSD5.pdf}}}}
+    \caption{Диаграмма классов приложения}
 \end{figure}
 
 На диаграмме показано, что центральным классом справочника является \texttt{Product}, который относится к категории, имеет набор характеристик и значения настраиваемых параметров. Классы \texttt{Enumeration}, \texttt{EnumerationValue} и \texttt{MeasurementUnit} используются как вспомогательные справочники для параметров и характеристик. Интерфейсные классы отделены от предметных классов пунктирными зависимостями: они не хранят данные самостоятельно, а отображают их пользователю и вызывают операции чтения или изменения через API.
@@ -450,145 +464,154 @@ The application stores categories, products, specifications, \\ parameters, enum
 
 ERD диаграмма построена по фактической структуре таблиц, описанной в модуле \texttt{src/db/database.py}. В модели выделены сущности для дерева категорий, товаров, характеристик, параметров, перечислений, единиц измерения и таблиц связей, которые позволяют назначать параметры категориям и хранить значения параметров конкретных товаров.
 
+% \begin{figure}[H]
+% \centering
+% \resizebox{\textwidth}{!}{%
+% \begin{tikzpicture}[
+%     entity/.style={
+%         draw,
+%         rounded corners,
+%         align=left,
+%         font=\scriptsize,
+%         inner sep=4pt,
+%         text width=4.2cm
+%     },
+%     relation/.style={-{Latex[length=2mm]}, thick},
+%     optional/.style={-{Latex[length=2mm]}, dashed, thick},
+%     reltext/.style={font=\scriptsize, fill=white, inner sep=1pt}
+% ]
+
+% \node[entity] (categories) at (0, 8) {
+% \textbf{categories}\\
+% \texttt{id} PK\\
+% \texttt{name}\\
+% \texttt{parent\_id} FK categories.id\\
+% UNIQUE(\texttt{parent\_id}, \texttt{name})
+% };
+
+% \node[entity] (products) at (6, 8) {
+% \textbf{products}\\
+% \texttt{id} PK\\
+% \texttt{name}\\
+% \texttt{category\_id} FK categories.id\\
+% \texttt{price}\\
+% \texttt{quantity}\\
+% \texttt{description}
+% };
+
+% \node[entity] (product_specifications) at (12, 8) {
+% \textbf{product\_specifications}\\
+% \texttt{product\_id} PK, FK products.id\\
+% \texttt{specification\_id} PK, FK specifications.id
+% };
+
+% \node[entity] (specifications) at (18, 8) {
+% \textbf{specifications}\\
+% \texttt{id} PK\\
+% \texttt{name}\\
+% \texttt{value}\\
+% \texttt{enum\_value\_id} FK enumeration\_values.id\\
+% \texttt{unit\_id} FK measurement\_units.id\\
+% \texttt{custom\_unit\_full\_name}\\
+% \texttt{custom\_unit\_short\_name}
+% };
+
+% \node[entity] (category_parameters) at (0, 3.5) {
+% \textbf{category\_parameters}\\
+% \texttt{id} PK\\
+% \texttt{category\_id} FK categories.id\\
+% \texttt{parameter\_id} FK parameters.id\\
+% \texttt{source\_category\_id} FK categories.id\\
+% \texttt{priority}\\
+% \texttt{is\_required}\\
+% \texttt{is\_inherited}\\
+% \texttt{min\_value}\\
+% \texttt{max\_value}
+% };
+
+% \node[entity] (parameters) at (6, 3.5) {
+% \textbf{parameters}\\
+% \texttt{id} PK\\
+% \texttt{code} UNIQUE\\
+% \texttt{name}\\
+% \texttt{description}\\
+% \texttt{parameter\_type}\\
+% \texttt{unit\_id} FK measurement\_units.id\\
+% \texttt{enum\_id} FK enumerations.id
+% };
+
+% \node[entity] (product_parameter_values) at (12, 3.5) {
+% \textbf{product\_parameter\_values}\\
+% \texttt{id} PK\\
+% \texttt{product\_id} FK products.id\\
+% \texttt{parameter\_id} FK parameters.id\\
+% \texttt{val\_real}\\
+% \texttt{val\_int}\\
+% \texttt{val\_str}\\
+% \texttt{val\_datetime}\\
+% \texttt{enum\_value\_id} FK enumeration\_values.id
+% };
+
+% \node[entity] (measurement_units) at (0, -1.3) {
+% \textbf{measurement\_units}\\
+% \texttt{id} PK\\
+% \texttt{full\_name} UNIQUE\\
+% \texttt{short\_name} UNIQUE\\
+% \texttt{description}
+% };
+
+% \node[entity] (enumerations) at (6, -1.3) {
+% \textbf{enumerations}\\
+% \texttt{id} PK\\
+% \texttt{name} UNIQUE\\
+% \texttt{description}\\
+% \texttt{created\_at}\\
+% \texttt{updated\_at}
+% };
+
+% \node[entity] (enumeration_values) at (12, -1.3) {
+% \textbf{enumeration\_values}\\
+% \texttt{id} PK\\
+% \texttt{enum\_id} FK enumerations.id\\
+% \texttt{item\_type}\\
+% \texttt{value}\\
+% \texttt{child\_enum\_id} FK enumerations.id\\
+% \texttt{priority}\\
+% \texttt{description}
+% };
+
+% \draw[relation] (categories) -- node[reltext, above]{1:N} (products);
+% \draw[relation] (categories) -- node[reltext, left]{1:N} (category_parameters);
+% \draw[optional] (categories.south east) to[bend right=20] node[reltext, right]{source} (category_parameters.north east);
+% \draw[relation] (products) -- node[reltext, above]{1:N} (product_specifications);
+% \draw[relation] (specifications) -- node[reltext, above]{1:N} (product_specifications);
+% \draw[relation] (products.south) to[bend left=15] node[reltext, right]{1:N} (product_parameter_values.north);
+% \draw[relation] (parameters) -- node[reltext, above]{1:N} (category_parameters);
+% \draw[relation] (parameters) -- node[reltext, above]{1:N} (product_parameter_values);
+% \draw[relation] (measurement_units) -- node[reltext, left]{1:N} (parameters);
+% \draw[relation]
+%     (measurement_units.south) -- ++(0,-1.0) -| node[reltext, pos=0.75, above]{1:N} (specifications.south);
+% \draw[relation] (enumerations) -- node[reltext, above]{1:N} (enumeration_values);
+% \draw[relation] (enumerations.north east) to[bend left=20] node[reltext, right]{child enum} (enumeration_values.north west);
+% \draw[relation] (enumerations) -- node[reltext, right]{1:N} (parameters);
+% \draw[relation] (enumeration_values) -- node[reltext, right]{1:N} (product_parameter_values);
+% \draw[relation] (enumeration_values.north east) to[bend right=15] node[reltext, right]{1:N} (specifications.south);
+
+% \end{tikzpicture}%
+% }
+% \caption{ERD диаграмма базы данных приложения}
+% \end{figure}
+
 \begin{figure}[H]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[
-    entity/.style={
-        draw,
-        rounded corners,
-        align=left,
-        font=\scriptsize,
-        inner sep=4pt,
-        text width=4.2cm
-    },
-    relation/.style={-{Latex[length=2mm]}, thick},
-    optional/.style={-{Latex[length=2mm]}, dashed, thick},
-    reltext/.style={font=\scriptsize, fill=white, inner sep=1pt}
-]
-
-\node[entity] (categories) at (0, 8) {
-\textbf{categories}\\
-\texttt{id} PK\\
-\texttt{name}\\
-\texttt{parent\_id} FK categories.id\\
-UNIQUE(\texttt{parent\_id}, \texttt{name})
-};
-
-\node[entity] (products) at (6, 8) {
-\textbf{products}\\
-\texttt{id} PK\\
-\texttt{name}\\
-\texttt{category\_id} FK categories.id\\
-\texttt{price}\\
-\texttt{quantity}\\
-\texttt{description}
-};
-
-\node[entity] (product_specifications) at (12, 8) {
-\textbf{product\_specifications}\\
-\texttt{product\_id} PK, FK products.id\\
-\texttt{specification\_id} PK, FK specifications.id
-};
-
-\node[entity] (specifications) at (18, 8) {
-\textbf{specifications}\\
-\texttt{id} PK\\
-\texttt{name}\\
-\texttt{value}\\
-\texttt{enum\_value\_id} FK enumeration\_values.id\\
-\texttt{unit\_id} FK measurement\_units.id\\
-\texttt{custom\_unit\_full\_name}\\
-\texttt{custom\_unit\_short\_name}
-};
-
-\node[entity] (category_parameters) at (0, 3.5) {
-\textbf{category\_parameters}\\
-\texttt{id} PK\\
-\texttt{category\_id} FK categories.id\\
-\texttt{parameter\_id} FK parameters.id\\
-\texttt{source\_category\_id} FK categories.id\\
-\texttt{priority}\\
-\texttt{is\_required}\\
-\texttt{is\_inherited}\\
-\texttt{min\_value}\\
-\texttt{max\_value}
-};
-
-\node[entity] (parameters) at (6, 3.5) {
-\textbf{parameters}\\
-\texttt{id} PK\\
-\texttt{code} UNIQUE\\
-\texttt{name}\\
-\texttt{description}\\
-\texttt{parameter\_type}\\
-\texttt{unit\_id} FK measurement\_units.id\\
-\texttt{enum\_id} FK enumerations.id
-};
-
-\node[entity] (product_parameter_values) at (12, 3.5) {
-\textbf{product\_parameter\_values}\\
-\texttt{id} PK\\
-\texttt{product\_id} FK products.id\\
-\texttt{parameter\_id} FK parameters.id\\
-\texttt{val\_real}\\
-\texttt{val\_int}\\
-\texttt{val\_str}\\
-\texttt{val\_datetime}\\
-\texttt{enum\_value\_id} FK enumeration\_values.id
-};
-
-\node[entity] (measurement_units) at (0, -1.3) {
-\textbf{measurement\_units}\\
-\texttt{id} PK\\
-\texttt{full\_name} UNIQUE\\
-\texttt{short\_name} UNIQUE\\
-\texttt{description}
-};
-
-\node[entity] (enumerations) at (6, -1.3) {
-\textbf{enumerations}\\
-\texttt{id} PK\\
-\texttt{name} UNIQUE\\
-\texttt{description}\\
-\texttt{created\_at}\\
-\texttt{updated\_at}
-};
-
-\node[entity] (enumeration_values) at (12, -1.3) {
-\textbf{enumeration\_values}\\
-\texttt{id} PK\\
-\texttt{enum\_id} FK enumerations.id\\
-\texttt{item\_type}\\
-\texttt{value}\\
-\texttt{child\_enum\_id} FK enumerations.id\\
-\texttt{priority}\\
-\texttt{description}
-};
-
-\draw[relation] (categories) -- node[reltext, above]{1:N} (products);
-\draw[relation] (categories) -- node[reltext, left]{1:N} (category_parameters);
-\draw[optional] (categories.south east) to[bend right=20] node[reltext, right]{source} (category_parameters.north east);
-\draw[relation] (products) -- node[reltext, above]{1:N} (product_specifications);
-\draw[relation] (specifications) -- node[reltext, above]{1:N} (product_specifications);
-\draw[relation] (products.south) to[bend left=15] node[reltext, right]{1:N} (product_parameter_values.north);
-\draw[relation] (parameters) -- node[reltext, above]{1:N} (category_parameters);
-\draw[relation] (parameters) -- node[reltext, above]{1:N} (product_parameter_values);
-\draw[relation] (measurement_units) -- node[reltext, left]{1:N} (parameters);
-\draw[relation]
-    (measurement_units.south) -- ++(0,-1.0) -| node[reltext, pos=0.75, above]{1:N} (specifications.south);
-\draw[relation] (enumerations) -- node[reltext, above]{1:N} (enumeration_values);
-\draw[relation] (enumerations.north east) to[bend left=20] node[reltext, right]{child enum} (enumeration_values.north west);
-\draw[relation] (enumerations) -- node[reltext, right]{1:N} (parameters);
-\draw[relation] (enumeration_values) -- node[reltext, right]{1:N} (product_parameter_values);
-\draw[relation] (enumeration_values.north east) to[bend right=15] node[reltext, right]{1:N} (specifications.south);
-
-\end{tikzpicture}%
-}
-\caption{ERD диаграмма базы данных приложения}
+    \centering
+    \IfFileExists{img/ER4.pdf}
+        {\includegraphics[width=0.8\textwidth]{img/ER4.pdf}}
+        {\fbox{\parbox{0.9\textwidth}{\centering Место для вставки файла \texttt{img/ER4.pdf}}}}
+    \caption{ERD диаграмма базы данных приложения}
 \end{figure}
 
-На диаграмме сплошные линии показывают основные внешние ключи, а пунктирная связь используется для указания исходной категории при наследовании параметров. Таблица \texttt{enumeration\_values} хранит как конечные значения перечислений, так и ссылки на вложенные перечисления через поле \texttt{child\_enum\_id}, поэтому она связана с таблицей \texttt{enumerations} двумя внешними ключами.
+
+На диаграмме сплошные линии показывают основные внешние ключи, а пунктирная связь используется для указания исходной категории при наследовании параметров. Таблица \texttt{enumeration\_values} хранит как конечные значения перечислений, так и ссылки на вложенные перечисления через поле \\ \texttt{child\_enum\_id}, поэтому она связана с таблицей \texttt{enumerations} двумя внешними ключами.
 
 Основные таблицы проекта:
 \begin{itemize}
@@ -606,9 +629,9 @@ UNIQUE(\texttt{parent\_id}, \texttt{name})
 
 \subsubsection{Технологии разработки}
 
-Для разработки серверной части выбран FastAPI, так как он позволяет быстро создавать REST API, автоматически формирует Swagger-документацию и поддерживает асинхронную работу. Для хранения данных используется PostgreSQL. Работа с базой данных выполняется через SQLAlchemy Core.
+Для разработки серверной части выбран FastAPI, так как он позволяет быстро создавать REST API, автоматически формирует Swagger-документацию и поддерживает асинхронную работу. Для хранения данных используется \\ PostgreSQL. Работа с базой данных выполняется через SQLAlchemy Core.
 
-Пользовательский интерфейс реализован без отдельного frontend-фреймворка: HTML, CSS и JavaScript отдаются самим FastAPI-приложением. Такой подход упрощает запуск проекта и соответствует формату курсовой работы.
+Пользовательский интерфейс реализован без отдельного \\ frontend-фреймворка: HTML, CSS и JavaScript отдаются самим \\ FastAPI-приложением. Такой подход упрощает запуск проекта и соответствует формату курсовой работы.
 
 Использованные технологии:
 \begin{itemize}
@@ -1073,9 +1096,11 @@ UNIQUE(\texttt{parent\_id}, \texttt{name})
     \caption{Пример мобильной версии интерфейса}
 \end{figure}
 
-\section{Заключение}
+Представленные изображения показывают основные пользовательские сценарии: просмотр справочника, работу с витриной, фильтрацию товаров, использование корзины и доступ к административным формам. Интерфейс сохраняет единую структуру на разных устройствах, поэтому пользователь может выполнять те же действия как с настольного компьютера, так и с мобильного экрана.
 
-В ходе курсовой работы было спроектировано и реализовано web-приложение для работы со справочником электронных комплектующих. В качестве предметной области использована интернет-витрина электроники: товары распределяются по категориям, имеют характеристики, значения перечислений, единицы измерения и могут отбираться пользователем через фильтры.
+\section*{Заключение}
+
+В ходе курсовой работы было спроектировано и реализовано \\ web-приложение для работы со справочником электронных комплектующих. В качестве предметной области использована интернет-витрина электроники: товары распределяются по категориям, имеют характеристики, значения перечислений, единицы измерения и могут отбираться пользователем через фильтры.
 
 В результате была разработана база данных PostgreSQL, серверная часть на FastAPI и одностраничный пользовательский интерфейс. Система поддерживает категории, товары, характеристики, перечисления, параметры категорий, наследование параметров, авторизацию администратора, фильтрацию витрины и клиентскую корзину. Для проекта также подготовлены основные проектные материалы: use-case, диаграмма классов, ERD, информационная архитектура, task flow и тестовые сценарии.
 

@@ -10,12 +10,11 @@
 \contentsline {subsection}{\numberline {2.2}Разработка приложения}{9}{subsection.2.2}%
 \contentsline {subsubsection}{\numberline {2.2.1}Архитектура информационной системы}{9}{subsubsection.2.2.1}%
 \contentsline {subsubsection}{\numberline {2.2.2}Диаграмма классов}{10}{subsubsection.2.2.2}%
-\contentsline {subsubsection}{\numberline {2.2.3}ERD диаграмма}{11}{subsubsection.2.2.3}%
+\contentsline {subsubsection}{\numberline {2.2.3}ERD диаграмма}{12}{subsubsection.2.2.3}%
 \contentsline {subsubsection}{\numberline {2.2.4}Технологии разработки}{13}{subsubsection.2.2.4}%
-\contentsline {subsubsection}{\numberline {2.2.5}Тестирование приложения}{13}{subsubsection.2.2.5}%
+\contentsline {subsubsection}{\numberline {2.2.5}Тестирование приложения}{14}{subsubsection.2.2.5}%
 \contentsline {subsection}{\numberline {2.3}Разработка пользовательского интерфейса}{23}{subsection.2.3}%
 \contentsline {subsubsection}{\numberline {2.3.1}Информационная архитектура}{23}{subsubsection.2.3.1}%
 \contentsline {subsubsection}{\numberline {2.3.2}Диаграмма потоков задач}{25}{subsubsection.2.3.2}%
 \contentsline {subsubsection}{\numberline {2.3.3}Выбор цветов и шрифтов}{25}{subsubsection.2.3.3}%
 \contentsline {subsubsection}{\numberline {2.3.4}Страницы интерфейса}{26}{subsubsection.2.3.4}%
-\contentsline {section}{\numberline {3}Заключение}{34}{section.3}%
